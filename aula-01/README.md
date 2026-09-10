@@ -203,3 +203,7 @@ erro.
 > sequer precisava separar as funções tokenizer e parser do
 > interpretador). Pra nosso estudo, contudo, é justamente a
 > separação do interpretador nessas partes que nos interessa!
+
+## Exercícios
+
+Antes da próxima aula, faça os [exercícios](exercicios.md).
