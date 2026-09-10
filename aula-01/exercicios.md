@@ -1,5 +1,9 @@
 # Exercícios (Aula 01)
 
+> **Atenção!** Antes de fazer estes exercícios leia as
+> [instruções](../instrucoes-exercicios.md) sobre como você deve
+> fazer e entregar os exercícios desta disciplina, neste período.
+
 Para cada questão abaixo, crie um diretório nomeado `qNN` (onde
 esse `N` o número indicado em cada questão abaixo).
 
