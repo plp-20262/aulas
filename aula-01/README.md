@@ -101,20 +101,19 @@ tokens da expressão, usando a pilha para armazenar valores
 pendentes para as operações ainda a processar. Mais uma vez,
 vejamos como podemos avaliar a expressão `2 2 3 + 5 * 1 - +`
 
--------------------------------------
- Pilha       | Restante da expressão
--------------------------------------
- []          | [2 2 3 + 5 * 1 - +]
- [2]         | [2 3 + 5 * 1 - +]
- [2 2]       | [3 + 5 * 1 - +]
- [2 2 3]     | [+ 5 * 1 - +]
- [2 5]       | [5 * 1 - +]
- [2 5 5]     | [* 1 - +]
- [2 25]      | [1 - +]
- [2 25 1]    | [- +]
- [2 24]      | [+]
- [26]        | []
--------------------------------------
+| Pilha    | Restante da expressão |
+|----------|-----------------------|
+| []       | [2 2 3 + 5 * 1 - +]   |
+| [2]      | [2 3 + 5 * 1 - +]     |
+| [2 2]    | [3 + 5 * 1 - +]       |
+| [2 2 3]  | [+ 5 * 1 - +]         |
+| [2 5]    | [5 * 1 - +]           |
+| [2 5 5]  | [* 1 - +]             |
+| [2 25]   | [1 - +]               |
+| [2 25 1] | [- +]                 |
+| [2 24]   | [+]                   |
+| [26]     | []                    |
+
 
 Observe que a cada linha, um token é retirado da lista de tokens
 ro restante da expressão (sempre na ordem direta de leitura, da
