@@ -8,8 +8,17 @@ contabilizados a tempo.
 
 ## Como criar o repositório
 
-Por ora, apenas responda ao formulário enviado pelo classroom. Em
-breve, criarei os repositórios (de quem tiver respondido, claro)
-e colocarei aqui mais instruções sobre como proceder. 
+Inicialmente, responda ao formulário enviado pelo classroom.
+Depois que você responder, eu criarei um repositório para você
+com o nome que você sugerir no formulário (a menos que já esteja
+usado) e o compartilharei com você. É nesse repositório que você
+deve fazer os exercícios.
 
-> O convite para o classroom foi enviado por email, através do SIGAA.
+> O convite para o classroom da turma foi enviado por email,
+> através do SIGAA.
+
+Para cada exercício, você deve criar um diretório específico. O nome
+do diretório será dado no próprio enunciado do exercício. Crie
+exatamente igual, para que a coleta possa ser automatizada. Se
+você errar o nome, o script pode não coletar sua resposta. Se
+isso acontecer, você não receberá a pontuação associada.
