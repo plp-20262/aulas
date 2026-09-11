@@ -16,6 +16,11 @@ livremente, mas sugiro colocar o nome da atividade em cada
 mensagem de commit. O ideal é nunca adicionar mais de uma questão
 num mesmo commit.
 
+Cada lista de exercícios tem seus prazos… depois dos prazos, você
+ainda poderá entregar suas respostas, mas é possível que sofram
+penalização por atraso ou até que já não valham mais pontos.
+Tentarei publicar continuamente a pontuação acumulada.
+
 **IMPORTANTE!** Somente se houver instruções específicas no
 enunciado das questões é que você deve fazer diferente do que
 está indicado aqui. A coleta e até parte da correção dos
