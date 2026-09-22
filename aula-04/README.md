@@ -1,4 +1,4 @@
-# Aula 04 — 21/Set — Estágio 2 (Semana 2): expressões-S (parte 2/2)
+# Aula 04 — 21/Set — Estágio 2 (Semana 2)
 
 > m2lisp: 
 > - adicionando suporte para operações com múltiplas aridades 
