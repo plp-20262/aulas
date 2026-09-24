@@ -1,5 +1,5 @@
 from tipos import Erro
-from m3lisp import parser
+from mlisp import parser
 import sys
 
 # lista de tokens vazia
