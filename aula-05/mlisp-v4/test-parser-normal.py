@@ -1,4 +1,4 @@
-from m3lisp import parser
+from mlisp import parser
 
 # + variádico teste 1: (+ 1 2 3 4) -> ['+', 1, 2, 3, 4]
 resultado = parser(["(", "+", "1", "2", "3", "4", ")"])

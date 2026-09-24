@@ -1,5 +1,5 @@
 from tipos import Erro
-from m3lisp import interpretador
+from mlisp import interpretador
 
 # + variádico
 assert interpretador(["+", 1, 2, 3, 4]) == 10
