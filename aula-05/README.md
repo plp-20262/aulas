@@ -18,7 +18,7 @@
    código real através de uma transformação mecânica (boilerplate);
 
 5. vejamos como fica o pseudo-código em `pseudo-codigo.md` 
-   - em seguida, veja como fica o código final em `m3lisp`
+   - em seguida, veja como fica o código final em `mlisp-v4`
 
 
 ## BNFs vs EBNFs
