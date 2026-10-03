@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from itertools import chain
 from typing import Callable, Optional, Any
 
-type Ast = int | str | list[Ast]
+type Ast = int | Token | list[Ast]
 
 class TokenType(Enum):
     INTEIRO = auto()

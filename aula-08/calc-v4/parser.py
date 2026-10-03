@@ -1,5 +1,5 @@
 from tipos import Ast, Erro, monadic_error, Stream, Token
-from tipos import INTEIRO, OPS_ADIT, OPS_MULT, POW, LPAREN, RPAREN
+from tipos import INTEIRO, OPS_ADIT, OPS_MULT, POW, LPAREN, RPAREN, TokenType
 
 
 @monadic_error
@@ -24,7 +24,7 @@ def parse_exp(stream: Stream) -> Ast | Erro:
     while OPS_ADIT(stream.peek()):
         op = stream.next()           # lê o Token do operador
         termo2 = parse_termo(stream) # lê um novo termo
-        termo = [op.lexema, termo, termo2]  # faz folding à esquerda com o lexema
+        termo = [op, termo, termo2]  # faz folding à esquerda com o Token
 
     return termo
 
@@ -36,7 +36,7 @@ def parse_termo(stream: Stream) -> Ast | Erro:
     while OPS_MULT(stream.peek()):
         op = stream.next()           # lê o Token do operador
         fator2 = parse_fator(stream) # lê um fator
-        fator = [op.lexema, fator, fator2]  # faz o folding à esquerda com o lexema
+        fator = [op, fator, fator2]  # faz o folding à esquerda com o Token
 
     return fator
 
@@ -51,7 +51,7 @@ def parse_fator(stream: Stream) -> Ast | Erro:
 
     stream.next()                # consome o token '**'
     fator = parse_fator(stream)  # chama a função recursivamente (associatividade à direita)
-    return ["**", atomo, fator]  # monta o nó da AST
+    return [Token(TokenType.POW, "**"), atomo, fator]  # monta o nó da AST
 
 
 @monadic_error

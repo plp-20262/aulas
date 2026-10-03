@@ -1,4 +1,4 @@
-from tipos import Ast, Erro, monadic_error
+from tipos import Ast, Erro, monadic_error, Token, TokenType
 from lexer import tokenizador
 from parser import parser
 
@@ -20,12 +20,22 @@ def eval(ast: Ast, env: Environment) -> int | float | Erro:
     if isinstance(ast, int):
         return ast
 
+    # Regra (Input) - Token INPUT
+    if isinstance(ast, Token) and ast.type == TokenType.INPUT:
+        return int(input())
+
     # Estrutura do nó AST fora do esperado
     if not isinstance(ast, list) or len(ast) != 3:
         return Erro(f"RUNTIME: forma de AST inválida '{ast}'")
 
     # Estrutura do nó AST: [operador, e1, e2]
-    operador, e1, e2 = ast[0], ast[1], ast[2]
+    operador_token, e1, e2 = ast[0], ast[1], ast[2]
+
+    # Extrai o lexema do operador para lookup na tabela
+    if isinstance(operador_token, Token):
+        operador = operador_token.lexema
+    else:
+        return Erro(f"RUNTIME: operador inválido '{operador_token}'")
 
     # Avalia subexpressões no ambiente env (Premissas)
     v1 = eval(e1, env)
