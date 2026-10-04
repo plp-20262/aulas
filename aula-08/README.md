@@ -31,7 +31,8 @@ Em `aula-08/calc-v4` apresento uma pequena, e última, atualização de `calc`.
 Adicionei operadores unários e uma função de _lift_ para evelar as operações
 parciais do domínio para operações totais. Com isso, é possível reduzir as
 regras de tratamento de erro. Revise a definição formal de `calc-v4` no
-[calc-v4/README.md](README.md) do diretório de `calc-v4`.
+[README.md](calc-v4/README.md) do diretório de `calc-v4`.
+
 
 ## 8. Nossa próxima Linguagem: calc com variáveis
 
