@@ -33,20 +33,34 @@ vez, mas usando referências recursivas à relação semântica.
 
 ## Como a formalização da semântica foi apresentada
 
-Expressaremos a semântica de avaliação na forma $⟨e, ρ⟩ ⇓ v$
+Para as LPs anteriores, usamos regras de transição para expressar a semântica
+das linguagens. Esse formalismo expressa como o estado da computação evolui de
+um dado estado para outro num estilo passo-a-passo. Por isso, esse tipo de
+semântica é também conhecido como _semântica operacional de pequeno passo_
+(_small-step operational semantics_). Também por esse motivo, o significado do
+programa (que neste caso equivale ao resultado produzido pela avaliação da
+expressão) é obtido pela aplicação repetida de regras de transição até que se
+obtenha uma expressão irredutível.
 
-> A notação acima lê-se: a expressão $e$, sob o ambiente $ρ$, avalia para o
-> valor $v$.
+A partir desta aula, expressaremos a semântica formal de avaliação na forma
+$⟨e, ρ⟩ ⇓ v$. Esta notação formaliza a chamada _semântica operacional de passo
+grande_ (_big-step operational semantics), também chamada de _semântica
+natural_ ou _semântica de avaliação_. Embora `calc-v2` seja uma LP tão simples
+que possa ter sua semântica perfeitamente expressa através de regras de
+transição, optei por usar semântica de avaliação como forma de  prepararmos o
+caminho para nossa próxima linguagem, que inclui variáveis.
 
-A ideia de **ambiente** (`environment`) é necessária à introdução de variáveis:
-um ambiente associa nomes a valores; avaliar uma variável, portanto, significa
-consultar seu valor no ambiente corrente. Na implementação de referência,
-representaremos ambientes como dicionários Python (ou lista de dicionários,
-para escopos aninhados).
+> A notação $⟨e, ρ⟩ ⇓ v$ lê-se: a expressão $e$, sob o ambiente $ρ$, avalia
+> para o valor $v$. Lembre que $e$ é nosso programa e $v$ é o seu significado
+> (ou seja, o resultado que queremos que seja produzido quando o programa for
+> executado).
 
-O material que segue formaliza a semântica **big-step** (também chamada de
-semântica natural ou de avaliação) para a `calc-v2`, preparando o caminho para
-a linguagem com variáveis.
+A ideia de **ambiente** (`environment`) é necessária para a introdução de
+variáveis: um ambiente associa nomes a valores; avaliar uma variável, portanto,
+significa consultar seu valor no ambiente corrente. Na implementação de
+referência, representaremos ambientes como dicionários Python (ou lista de
+dicionários, para escopos aninhados). Mais uma vez, relembre que `calc` não tem
+variáveis… logo, usaremos ambientes vazios aqui.
 
 
 # Semântica Operacional Big-Step de `calc-v2`
