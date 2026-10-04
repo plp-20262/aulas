@@ -31,7 +31,28 @@ assert eval([token("*"), [token("/"), 5, 0], [token("+"), 2, 3]], env) == Erro("
 
 # 6. Validação de Formato da AST (Nós malformados)
 assert isinstance(eval([token("+")], env), Erro)  # Faltam operandos
-assert isinstance(eval([token("+"), 1], env), Erro)  # Operador binário com apenas 1 operando
+assert isinstance(eval([token("*"), 1], env), Erro)  # Operador binário com apenas 1 operando
 assert isinstance(eval([token("+"), 1, 2, 3], env), Erro)  # Mais operandos do que o nó binário suporta
+
+# 7. Operadores Unários
+assert eval([token("+"), 5], env) == 5   # unário plus
+assert eval([token("-"), 5], env) == -5  # unário minus
+assert eval([token("+"), -3], env) == -3  # unário plus com negativo
+assert eval([token("-"), -3], env) == 3   # unário minus com negativo
+
+# 8. Precedência: unário > ** > * / > + -
+assert eval([token("+"), [token("**"), 2, 3]], env) == 8   # +(2**3)
+assert eval([token("-"), [token("**"), 2, 3]], env) == -8  # -(2**3)
+assert eval([token("**"), [token("-"), 2], 3], env) == -8  # (-2)**3
+assert eval([token("*"), [token("-"), 3], 4], env) == -12  # -3*4
+assert eval([token("+"), [token("-"), 3], 4], env) == 1    # -3+4
+
+# 9. Associatividade à direita de **
+assert eval([token("**"), 2, [token("**"), 3, 2]], env) == 512  # 2**(3**2)
+assert eval([token("**"), [token("-"), 2], [token("-"), 3]], env) == -0.125  # (-2)**(-3) = 1/(-8)
+assert eval([token("**"), 2, [token("-"), 3]], env) == 0.125  # 2**-3 = 1/8
+
+# 10. Erro com INPUT token como expressão (não deveria acontecer no parser, mas testar eval)
+# assert isinstance(eval(token("?"), env), Erro)  # INPUT sem contexto
 
 print("Todos os testes passaram com sucesso!")

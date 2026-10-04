@@ -95,4 +95,47 @@ tokens = tokenizador(" 10  + \n\t (  20   *  30 ) ")
 resultado = parser(tokens)
 assert resultado == [token("+"), 10, [token("*"), 20, 30]], f"Obtive {resultado!r}"
 
+
+# --- 5. OPERADORES UNÁRIOS ---
+
+# Unário plus simples
+tokens = tokenizador("+5")
+resultado = parser(tokens)
+assert resultado == [token("+"), 5], f"Obtive {resultado!r}"
+
+# Unário minus simples
+tokens = tokenizador("-5")
+resultado = parser(tokens)
+assert resultado == [token("-"), 5], f"Obtive {resultado!r}"
+
+# Unário com precedência sobre **: -2**2 = (-2)**2 = 4 (unário tem precedência mais alta que **)
+tokens = tokenizador("-2**2")
+resultado = parser(tokens)
+assert resultado == [token("**"), [token("-"), 2], 2], f"Obtive {resultado!r}"
+
+# Unário no expoente: 2**-3 = 2**(-3)
+tokens = tokenizador("2**-3")
+resultado = parser(tokens)
+assert resultado == [token("**"), 2, [token("-"), 3]], f"Obtive {resultado!r}"
+
+# Unário com parênteses: -(3+2) = -5
+tokens = tokenizador("-(3+2)")
+resultado = parser(tokens)
+assert resultado == [token("-"), [token("+"), 3, 2]], f"Obtive {resultado!r}"
+
+# Unário com multiplicação: -3*4 = (-3)*4
+tokens = tokenizador("-3*4")
+resultado = parser(tokens)
+assert resultado == [token("*"), [token("-"), 3], 4], f"Obtive {resultado!r}"
+
+# Unário plus com precedência: +3**2 = (+3)**2 = 9
+tokens = tokenizador("+3**2")
+resultado = parser(tokens)
+assert resultado == [token("**"), [token("+"), 3], 2], f"Obtive {resultado!r}"
+
+# Combinação: unário em subexpressão
+tokens = tokenizador("-(3-5)")
+resultado = parser(tokens)
+assert resultado == [token("-"), [token("-"), 3, 5]], f"Obtive {resultado!r}"
+
 print("Todos os testes de expressões BEM-FORMADAS passaram com sucesso!")

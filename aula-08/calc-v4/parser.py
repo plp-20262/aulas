@@ -1,5 +1,5 @@
 from tipos import Ast, Erro, monadic_error, Stream, Token
-from tipos import INTEIRO, OPS_ADIT, OPS_MULT, POW, LPAREN, RPAREN, TokenType
+from tipos import INTEIRO, OPS_ADIT, OPS_MULT, POW, LPAREN, RPAREN, TokenType, UNARIO
 
 
 @monadic_error
@@ -42,16 +42,26 @@ def parse_termo(stream: Stream) -> Ast | Erro:
 
 
 @monadic_error
+def parse_unario(stream: Stream) -> Ast | Erro:
+    """unario ::= [ + | - ] atomo"""
+    if tok := UNARIO(stream.peek()):
+        stream.next()
+        atomo = parse_atomo(stream)
+        return [tok, atomo]
+    return parse_atomo(stream)
+
+
+@monadic_error
 def parse_fator(stream: Stream) -> Ast | Erro:
-    """fator ::= atomo [ ** fator ]"""
-    atomo = parse_atomo(stream)  # parte em comum pras duas produções
+    """fator ::= unario [ ** fator ]"""
+    unario = parse_unario(stream)
 
-    if not POW(stream.peek()):  # look-ahead de 1 checando o tipo POW
-        return atomo
+    if not POW(stream.peek()):
+        return unario
 
-    stream.next()                # consome o token '**'
-    fator = parse_fator(stream)  # chama a função recursivamente (associatividade à direita)
-    return [Token(TokenType.POW, "**"), atomo, fator]  # monta o nó da AST
+    op = stream.next()
+    fator = parse_fator(stream)
+    return [op, unario, fator]
 
 
 @monadic_error

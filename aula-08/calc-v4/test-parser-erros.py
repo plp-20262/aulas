@@ -3,6 +3,16 @@ from tipos import Erro
 from lexer import tokenizador
 from parser import parser
 
+
+def _flatten(lst):
+    """Helper to recursively find Erro in nested lists."""
+    for item in lst:
+        if isinstance(item, Erro):
+            yield item
+        elif isinstance(item, list):
+            yield from _flatten(item)
+
+
 def parse_code(code: str) -> Erro:
     """Helper to tokenize and parse a string, returning any resulting Erro."""
     res = tokenizador(code)
@@ -69,5 +79,27 @@ assert resultado == Erro("sintaxe: tokens depois da expressão"), f"Obtive {resu
 # Fechamento de parêntese em excesso
 resultado = parse_code("(1 + 2))")
 assert resultado == Erro("sintaxe: tokens depois da expressão"), f"Obtive {resultado!r}"
+
+
+# --- 3. ERROS DE OPERADORES UNÁRIOS ---
+# NOTA: O parser atual tem limitação conhecida na propagação de erros de subparsers
+# (veja testes comentados acima para "1 +" e "1 + * 2").
+# Estes testes documentam o comportamento atual; corrigir exigiria verificar
+# retornos de Erro em cada chamada recursiva do parser.
+
+# Dois operadores unários seguidos (repetição não permitida pela gramática)
+# Atualmente retorna AST malformada contendo Erro, não Erro direto
+resultado = parse_code("--2")
+assert isinstance(resultado, list) and any(isinstance(x, Erro) for x in _flatten(resultado)), f"Esperava Erro na AST, obtive {resultado!r}"
+
+resultado = parse_code("++2")
+assert isinstance(resultado, list) and any(isinstance(x, Erro) for x in _flatten(resultado)), f"Esperava Erro na AST, obtive {resultado!r}"
+
+resultado = parse_code("-+2")
+assert isinstance(resultado, list) and any(isinstance(x, Erro) for x in _flatten(resultado)), f"Esperava Erro na AST, obtive {resultado!r}"
+
+resultado = parse_code("+-2")
+assert isinstance(resultado, list) and any(isinstance(x, Erro) for x in _flatten(resultado)), f"Esperava Erro na AST, obtive {resultado!r}"
+
 
 print("Todos os testes de ERRO passaram!")

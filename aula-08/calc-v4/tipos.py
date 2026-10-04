@@ -56,6 +56,7 @@ OPERADOR = match_type(
 )
 OPS_ADIT = match_type(TokenType.ADD, TokenType.SUB)
 OPS_MULT = match_type(TokenType.MULT, TokenType.DIV)
+UNARIO = match_type(TokenType.ADD, TokenType.SUB)
 
 
 class Stream:
