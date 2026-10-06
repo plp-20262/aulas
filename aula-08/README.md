@@ -245,51 +245,56 @@ resolvida pelo `let` mais próximo **sintaticamente** que a vincula.
 
 Considere `let x = 2 + 3 in x * x` com ambiente inicial `ρ = ∅`.
 
-ρ0 = ∅
-ρ1 = ρ0[x ↦ 5]
-
-1. `⟨2, ρ⟩ ⇓ 2` (Num)
-2. `⟨3, ρ⟩ ⇓ 3` (Num)
-3. `⟨2 + 3, ρ⟩ ⇓ 5` (Op, 1–2)
-4. `⟨x, ρ[x ↦ 5]⟩ ⇓ 5` (Var, pois `ρ[x ↦ 5](x) = 5`)
-5. `⟨x, ρ[x ↦ 5]⟩ ⇓ 5` (Var)
-6. `⟨x * x, ρ[x ↦ 5]⟩ ⇓ 25` (Op, 4–5)
-7. `⟨let x = 2 + 3 in x * x, ρ⟩ ⇓ 25` (Let, 3 e 6)
-
-**Conclusão:** `⟨let x = 2 + 3 in x * x, ∅⟩ ⇓ 25`.
+```
+⟨let x = 2 + 3 in x * x, ρ⟩ ⇓ 25        (Let)
+├─ ⟨2 + 3, ρ⟩ ⇓ 5                       (Op)
+│  ├─ ⟨2, ρ⟩ ⇓ 2                        (Num)
+│  ├─ ⟨3, ρ⟩ ⇓ 3                        (Num)
+│  └─ +↑(2, 3) = 5                      (operação semântica)
+└─ ⟨x * x, ρ[x ↦ 5]⟩ ⇓ 25               (Op)
+   ├─ ⟨x, ρ[x ↦ 5]⟩ ⇓ 5                 (Var)
+   │  └─ ρ[x ↦ 5](x) = 5                (acesso ao ambiente)
+   ├─ ⟨x, ρ[x ↦ 5]⟩ ⇓ 5                 (Var)
+   │  └─ ρ[x ↦ 5](x) = 5                (acesso ao ambiente)
+   └─ *↑(5, 5) = 25                     (operação semântica)
+```
 
 ### Exemplo com Sombreamento
 
-Considere `let x = 1 in (let x = 2 in x) + x` com `ρ = ∅`.
+Considere `let x = 1 in (let x = 2 in x) + x` com ambiente inicial `ρ = ∅`.
 
-1. `⟨1, ρ⟩ ⇓ 1` (Num)
-2. `⟨2, ρ[x ↦ 1]⟩ ⇓ 2` (Num)
-3. `⟨x, ρ[x ↦ 1][x ↦ 2]⟩ ⇓ 2` (Var); note que `ρ[x ↦ 1][x ↦ 2] = ρ[x ↦ 2]`
-4. `⟨let x = 2 in x, ρ[x ↦ 1]⟩ ⇓ 2` (Let, 2–3)
-5. `⟨x, ρ[x ↦ 1]⟩ ⇓ 1` (Var)
-6. `⟨(let x = 2 in x) + x, ρ[x ↦ 1]⟩ ⇓ 3` (Op, 4–5)
-7. `⟨let x = 1 in (let x = 2 in x) + x, ρ⟩ ⇓ 3` (Let, 1 e 6)
-
-**Conclusão:** `⟨let x = 1 in (let x = 2 in x) + x, ∅⟩ ⇓ 3`.
+```
+⟨let x = 1 in (let x = 2 in x) + x, ρ⟩ ⇓ 3        (Let)
+├─ ⟨1, ρ⟩ ⇓ 1                                     (Num)
+└─ ⟨(let x = 2 in x) + x, ρ[x ↦ 1]⟩ ⇓ 3           (Op)
+   ├─ ⟨let x = 2 in x, ρ[x ↦ 1]⟩ ⇓ 2              (Let)
+   │  ├─ ⟨2, ρ[x ↦ 1]⟩ ⇓ 2                        (Num)
+   │  └─ ⟨x, ρ[x ↦ 1][x ↦ 2]⟩ ⇓ 2                 (Var)
+   │     └─ ρ[x ↦ 1][x ↦ 2](x) = 2                (acesso ao ambiente)
+   ├─ ⟨x, ρ[x ↦ 1]⟩ ⇓ 1                           (Var)
+   │  └─ ρ[x ↦ 1](x) = 1                          (acesso ao ambiente)
+   └─ +↑(2, 1) = 3                                (operação semântica)
+```
 
 ### Exemplo com Variável Livre
 
-Considere `let x = 1 in x + y` com `ρ = ∅`.
+Considere `let x = 1 in x + y` com ambiente inicial `ρ = ∅`.
 
-1. `⟨1, ρ⟩ ⇓ 1` (Num)
-2. `⟨x, ρ[x ↦ 1]⟩ ⇓ 1` (Var)
-3. `y ∉ dom(ρ[x ↦ 1])` a variável `y` é livre
-4. `⟨y, ρ[x ↦ 1]⟩ ⇓ erro` (VarNaoLigada)
-5. `⟨x + y, ρ[x ↦ 1]⟩ ⇓ erro` (ErrDir)
-6. `⟨let x = 1 in x + y, ρ⟩ ⇓ erro` (Let, 1 e 5)
-
-**Conclusão:** `⟨let x = 1 in x + y, ∅⟩ ⇓ erro`.
+```
+⟨let x = 1 in x + y, ∅⟩ ⇓ erro               (Let)
+├─ ⟨1, ∅⟩ ⇓ 1                                (Num)
+└─ ⟨x + y, ∅[x ↦ 1]⟩ ⇓ erro                  (ErrDir)
+   ├─ ⟨x, ∅[x ↦ 1]⟩ ⇓ 1                      (Var)
+   │  └─ ∅[x ↦ 1](x) = 1                     (acesso ao ambiente)
+   └─ ⟨y, ∅[x ↦ 1]⟩ ⇓ erro                   (VarNaoLigada)
+      └─ y ∉ dom(∅[x ↦ 1]) = {x}             (acesso ao ambiente)
+```
 
 ### Pureza e Ausência de Efeitos
 
 Apesar da introdução de variáveis, a linguagem **permanece puramente expressiva**:
 
-- não há comandos de atribuição (`x := e`); temos comandos de ligação/vinculação;
+- não há comandos de atribuição (`x := e`); há comando de ligação/vinculação;
 - não há sequenciamento (`e1; e2`);
 - não há laços nem condicionais nesta versão;
 - a única forma de alterar o ambiente é o `let`, que produz um **novo** ambiente, sem mutação.
@@ -299,35 +304,20 @@ e2` depende apenas do valor de `e1` e do valor de `e2` no ambiente estendido.
 Também preserva o **determinismo**: a semântica continua sendo uma função
 parcial de expressões (e ambientes) para valores.
 
+
 ### Propriedades Atualizadas
 
-- **Determinismo:** mantém-se. Para toda expressão `e` e todo ambiente `ρ`,
+- **Determinismo**: mantém-se. Para toda expressão `e` e todo ambiente `ρ`,
 existe no máximo um `v` tal que `⟨e, ρ⟩ ⇓ v`.
-- **Composicionalidade:** mantém-se. O valor de uma expressão é função dos
+- **Composicionalidade**: mantém-se. O valor de uma expressão é função dos
 valores de suas subexpressões imediatas (e do ambiente, para as variáveis).
-- **Ambiente agora relevante:** o valor de uma expressão passa a depender de
+- **Ambiente agora relevante**: o valor de uma expressão passa a depender de
 `ρ` sempre que houver variáveis livres. `calc-v2` era o caso degenerado em que
 `ρ` era irrelevante.
-- **Ausência de recursão:** o `let` é **não-recursivo** (`let x = e1 in e2`):
+- **Ausência de recursão**: o `let` é **não-recursivo** (`let x = e1 in e2`):
 `x` **não** está em escopo dentro de `e1`. Isso reflete a ordem de avaliação:
 `e1` é avaliado **antes** da vinculação.
 
----
-
-## Resumo
-
-| Aspecto                            | `calc-v2`                               | `aljabr` |
-|------------------------------------|-----------------------------------------|----------------------------|
-| **Sintaxe**                        | Números, `+`, `-`, `*`, `/`, parênteses | + `x`, `let x = e1 in e2` |
-| **Forma do julgamento**            | `⟨e, ρ⟩ ⇓ v`                            | `⟨e, ρ⟩ ⇓ v` |
-| **Ambiente**                       | Vazio (sem variáveis)                   | Não-vazio; funções parciais estendidas por `let` |
-| **Estilo de semântica**            | Big-step                                | Big-step |
-| **Determinismo**                   | Sim                                     | Sim |
-| **Propagação de erro**             | Sim (divisão por zero)                  | Sim (divisão por zero + variável não vinculada) |
-| **Efeitos colaterais**             | Nenhum                                  | Nenhum (mantém-se puramente expressiva) |
-| **Novas regras**                   | —                                       | `(Var)`, `(VarNaoLigada)`, `(Let)` |
-
----
 
 ## Referências
 
