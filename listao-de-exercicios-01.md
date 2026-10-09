@@ -10,7 +10,6 @@ Esta lista cobre todo o conteúdo visto nas oito primeiras aulas, organizado pel
 | 2 | Sintaxe estruturada: ASTs, s-expressões, BNF/EBNF, parsers, precedência e associatividade | 3–6 |
 | 3 | Semântica de avaliação (big-step), operações totais, variáveis e ambientes | 7–8 |
 
----
 
 ## Como usar esta lista
 
@@ -52,7 +51,6 @@ Esta lista cobre todo o conteúdo visto nas oito primeiras aulas, organizado pel
 
 Ao final há ainda um bloco de **questões integradoras** (Estágios 1 a 3).
 
----
 
 # Estágio 1 — Aritmética em RPN (Aulas 1 e 2)
 
@@ -65,7 +63,6 @@ Ao final há ainda um bloco de **questões integradoras** (Estágios 1 a 3).
 - distinguir linguagem-objeto de metalinguagem e discutir vantagens e limites de linguagem natural, implementação de referência e notações formais;
 - especificar o léxico com expressões regulares, a sintaxe com BNF e a semântica com regras de transição, e derivar programas a partir de uma gramática.
 
----
 
 ## 1A — Notações e avaliação de expressões (Aula 1)
 
@@ -126,7 +123,6 @@ Ao final há ainda um bloco de **questões integradoras** (Estágios 1 a 3).
 
 **1.14** `[X]` Acrescente os operadores `dup` (duplica o topo), `swap` (troca os dois valores do topo) e `drop` (descarta o topo). O que eles revelam sobre a pilha como "estado da computação"? Que construções a notação BNF e as regras de transição precisariam ganhar para descrevê-los?
 
----
 
 ## 1B — O pipeline de processamento: léxico, sintaxe e semântica (Aulas 1 e 2)
 
@@ -159,7 +155,6 @@ Ao final há ainda um bloco de **questões integradoras** (Estágios 1 a 3).
 - (b) Acrescente o operador `//` (divisão inteira) mudando *apenas* essas constantes. O que prova que isso funcionou?
 - (c) Que operador *não* poderia ser acrescentado só mexendo nessas constantes? Por quê?
 
----
 
 ## 1C — Tratamento de erros (Aula 2)
 
@@ -175,7 +170,6 @@ Ao final há ainda um bloco de **questões integradoras** (Estágios 1 a 3).
 
 **1.28** `[C]` Compare quatro estratégias de tratamento de erros: exceções, códigos de retorno, valor especial (monádico) e `Optional`/`Result`. Cite vantagens, desvantagens e pelo menos uma linguagem real que adote cada uma. *(Pesquisa.)*
 
----
 
 ## 1D — Metalinguagens e especificação formal (Aula 2)
 
@@ -229,7 +223,6 @@ Ao final há ainda um bloco de **questões integradoras** (Estágios 1 a 3).
 
 **1.47** `[C]` *(Pesquisa.)* Que linguagens e dispositivos reais usam RPN ou uma máquina de pilha (por exemplo, Forth, PostScript, o bytecode da JVM, calculadoras HP)? Por que a escolha de uma pilha faz sentido em cada caso?
 
----
 # Estágio 2 — Sintaxe estruturada: ASTs, s-expressões e notação infixa (Aulas 3 a 6)
 
 ### Ao final deste estágio você deve ser capaz de
@@ -244,7 +237,6 @@ Ao final há ainda um bloco de **questões integradoras** (Estágios 1 a 3).
 - explicar por que a recursão à esquerda impede o parser descendente recursivo e como o *folding* recupera a associatividade;
 - projetar, implementar e testar o parser da linguagem `calc` (infixa), produzindo a mesma AST das notações anteriores.
 
----
 
 ## 2A — Sintaxe concreta × sintaxe abstrata e ASTs (Aula 3)
 
@@ -294,7 +286,6 @@ Ao final há ainda um bloco de **questões integradoras** (Estágios 1 a 3).
 
 **2.15** `[C]` Compare os dois caminhos para executar um programa RPN: (a) avaliar diretamente com a pilha de valores; (b) construir uma AST e depois interpretá-la. Quais as vantagens de cada um? Por que o segundo se torna indispensável em linguagens mais complexas?
 
----
 
 ## 2B — S-expressões e o algoritmo de pareamento de parênteses (Aulas 3 e 4)
 
@@ -361,7 +352,6 @@ Ao final há ainda um bloco de **questões integradoras** (Estágios 1 a 3).
 
 **2.30** `[C]` Compare o esforço de escrever o parser de RPN, o de s-expressões e o de notação infixa. Que decisão de design de cada sintaxe explica a diferença?
 
----
 
 ## 2C — Léxico e sintaxe formais de mlisp (Aula 4)
 
@@ -419,7 +409,6 @@ Para cada modificação, diga se mudou o léxico ou a sintaxe.
 
 **2.44** `[C]` Por que não basta a intuição para construir lexers e parsers de linguagens reais? Qual o papel das especificações formais na construção desses componentes?
 
----
 
 ## 2D — Parser descendente recursivo (Aulas 4 e 5)
 
@@ -469,7 +458,6 @@ def parse_argumentos(stream):
 
 **2.55** `[C]` Diferencie *erro léxico* e *erro sintático* no contexto do parser: dê dois exemplos de cada tipo em mlisp e diga qual etapa do pipeline deve reportá-los.
 
----
 
 ## 2E — EBNF, aridade, associatividade e precedência (Aula 5)
 
@@ -522,7 +510,6 @@ def parse_argumentos(stream):
 
 **2.70** `[X]` *(Pesquisa.)* Em Python, `a < b < c` tem um significado especial (encadeamento de comparações); em Java, é um erro de tipo. Que decisão de design de sintaxe e semântica explica essa diferença? Que outras linguagens tratam comparações como operadores **não associativos**?
 
----
 
 ## 2F — Projeto da gramática de `calc` (Aula 5)
 
@@ -587,7 +574,6 @@ Encontre expressões que produzam derivações diferentes nas gramáticas origin
 
 **2.83** `[P]` Explique por que a regra `A ::= A x | A y | z` pode ser reescrita como `A ::= z { x | y }`: (a) por que a regra é válida? (b) que benefício traz para o parser? Enumere as cadeias de comprimento até 3 geradas por ambas.
 
----
 
 ## 2G — Transformações de gramáticas e o parser LL(1) de `calc` (Aula 6)
 
@@ -685,7 +671,6 @@ def parse_exp():
 
 **2.104** `[C]` O parser descendente recursivo é apenas uma das estratégias de análise sintática. Cite outras famílias (por exemplo, *bottom-up*/LR e parsers com *backtracking*) e explique, em linhas gerais, o que elas fazem de diferente. Que tipo de gramática (recursão à esquerda, prefixos comuns) cada família tolera melhor, e por que o curso adota a abordagem LL(1)?
 
----
 # Estágio 3 — Semântica de avaliação, variáveis e ambientes (Aulas 7 e 8)
 
 ### Ao final deste estágio você deve ser capaz de
@@ -699,7 +684,6 @@ def parse_exp():
 - explicar variáveis, ambientes, vinculação local (`let..in`), escopo léxico, sombreamento (*shadowing*), variáveis livres e a diferença entre avaliação por substituição e por ambiente;
 - transcrever regras semânticas em uma função `eval(ast, env)` e implementar `calc` e `aljabr` completos, com testes.
 
----
 
 ## 3A — O lexer renovado (Aula 7)
 
@@ -721,7 +705,6 @@ def parse_exp():
 
 **3.9** `[C]` Por que erros léxicos são reportados antes da análise sintática? O que o seu lexer devolve ao encontrar um caractere desconhecido, e como isso se encaixa no tratamento monádico de erros?
 
----
 
 ## 3B — Semântica operacional big-step de `calc` (Aula 7)
 
@@ -775,7 +758,6 @@ def parse_exp():
 
 **3.30** `[P]` Para o programa RPN `1 2 + 3 4 + *`, escreva a sequência de estados (pequenos passos) e, para a expressão infixa equivalente `(1 + 2) * (3 + 4)`, a árvore de derivação (passo grande). Compare o que cada uma mostra.
 
----
 
 ## 3C — `calc` revisitada: operações totais (*lift*) e operadores unários (Aula 8)
 
@@ -822,7 +804,6 @@ diga se cada entrada é aceita, derivando-a ou justificando a rejeição: `-2 **
 
 **3.44** `[D]` Monte uma tabela com 15 expressões aritméticas e compare o resultado de `calc-v4` com o de Python. Documente cada divergência e explique-a como uma decisão de design (por exemplo, `-2 ** 2`, divisão inteira, `0 ** 0`, expoente negativo, divisão por zero).
 
----
 
 ## 3D — `aljabr`: variáveis, `let..in` e ambientes (Aula 8)
 
@@ -935,7 +916,6 @@ Em seguida, escreva a definição recursiva de `fv(e)` para cada forma de expres
 
 **3.76** `[I]` Escreva `aljabr` de modo que a tabela "regra → código" seja evidente: uma função por regra, nomeada como a regra (`regra_num`, `regra_var`, `regra_op`, `regra_let`), com um *dispatcher*. Explique, em um comentário, por que o código é uma "leitura quase literal" das regras.
 
----
 
 # Questões integradoras (Estágios 1 a 3)
 
@@ -961,7 +941,6 @@ Em seguida, escreva a definição recursiva de `fv(e)` para cada forma de expres
 
 **I.11** `[X]` *Mini-projeto:* escolha uma extensão de `aljabr` (por exemplo, módulo `%`, números decimais, comentários, funções primitivas como `min` e `max`) e percorra o ciclo completo do curso: (1) problema; (2) decisão de design; (3) sintaxe (léxico e EBNF); (4) semântica informal; (5) implementação; (6) formalização (regras); (7) alternativas; (8) linguagens reais que fizeram escolhas semelhantes ou diferentes.
 
----
 
 # Checklist de competências
 
@@ -1006,4 +985,3 @@ Marque cada item quando conseguir fazê-lo **sem consultar as notas**.
 - [ ] Comparar avaliação por substituição e por ambiente
 - [ ] Transcrever regras em `eval(ast, env)` e implementar `calc` e `aljabr`
 
----
