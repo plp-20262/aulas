@@ -181,3 +181,101 @@ Observe que:
 escopo dentro de `e1` (o `let` **não é recursivo**);
 - o escopo de `x` é **estritamente** o corpo `e2`.
 
+# Como testar e executar `aljabr`
+
+Todas as instruções abaixo assumem que você está no diretório deste
+projeto (`aula-08/aljabr-v1`).
+
+## Pré-requisitos
+
+- Python 3.10 ou mais recente;
+- `pytest` instalado (caso ainda não esteja):
+
+```bash
+python3 -m pip install pytest
+```
+
+## Testar
+
+A suíte de testes fica no diretório `tests/` e é dividida em cinco arquivos:
+
+| Arquivo                    | O que testa                                                                      |
+|----------------------------|----------------------------------------------------------------------------------|
+| `tests/test_lexer.py`      | o tokenizador (literais, operadores, `NOME`, palavras reservadas, erros léxicos) |
+| `tests/test_parser.py`     | o parser de expressões aritméticas (bem formadas e erros)                        |
+| `tests/test_let_parser.py` | o parser das vinculações `let..in` (bem formadas e erros)                        |
+| `tests/test_eval.py`       | o avaliador `eval` (operadores, precedência, propagação de erros)                |
+| `tests/test_let_eval.py`   | o avaliador `eval` para variáveis e `let..in` |
+
+Para rodar a suíte inteira:
+
+```bash
+python3 -m pytest tests
+```
+
+Para rodar apenas um arquivo, ou um único teste:
+
+```bash
+python3 -m pytest tests/test_lexer.py
+python3 -m pytest tests/test_parser.py -k "unclosed_paren"
+```
+
+Espera-se algo como `146 passed, 2 xfailed`. Os dois `xfail` são testes que
+documentam **limitações conhecidas** do parser atual (erros de subparsers não
+são propagados em `parse_exp`/`parse_termo`); eles falham de propósito e
+devem começar a passar quando o parser for corrigido.
+
+Observações:
+
+- não há `pyproject.toml` nem `setup.py` neste diretório, de propósito: os
+  testes rodam direto da fonte. Por isso use sempre `python3 -m pytest`
+  (e não apenas `pytest`) e passe o diretório dos testes explicitamente;
+- **não rode `pytest` sem caminho a partir da raiz do repositório**: há
+  outro pacote chamado `tests/` em `aula-11/aljabr-v1` e a coleta
+  colidiria. Sempre especifique o caminho, por exemplo:
+  `python3 -m pytest aula-08/aljabr-v1/tests`.
+
+## Executar
+
+O interpretador é o arquivo `aljabr.py`. Ele aceita o programa de duas
+maneiras: lendo um arquivo cujo nome for passado como argumento, ou lendo
+da entrada padrão (`stdin`).
+
+A partir de um arquivo `.al`:
+
+```bash
+python3 aljabr.py prog1.al
+```
+
+```
+let x = 2 in
+let y = x ** 2 in
+let z = y + 1 in
+x + y + z
+
+-->  11
+```
+
+A partir da entrada padrão (digite o programa e finalize com `Ctrl-D` no
+macOS/Linux, ou `Ctrl-Z Enter` no Windows):
+
+```bash
+python3 aljabr.py
+```
+
+Ou, de forma mais prática em scripts/pipe:
+
+```bash
+echo "let x = 1 in x + 2" | python3 aljabr.py
+```
+
+```
+let x = 1 in x + 2
+
+-->  3
+```
+
+> O arquivo `prog2.al` ainda não é aceito pelo interpretador atual: ele usa
+> a sintaxe de funções (`[x, y => x + y]`), que será adicionada em uma aula
+> futura.
+
