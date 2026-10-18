@@ -1,6 +1,6 @@
-# Aula 09,  Funções e closures (parte 1/4)
+# Aula 09 — Unidade 4 (1/4)
 
-Estágio 4 (parte 1/4)
+Unidade 4 (parte 1/4)
 
 ## Objetivo geral
 
@@ -64,7 +64,7 @@ Se quisermos `quad de 5`, precisamos escrever `5 * 5` de novo.
 linguagem só nos permite abstrair o **resultado**.
 
 
-### 1.3 Pergunta central do Estágio 4
+### 1.3 Pergunta central da Unidade 4
 
 > **Como abstrair a própria computação, e não apenas o resultado?**
 

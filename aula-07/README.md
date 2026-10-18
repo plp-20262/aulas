@@ -1,6 +1,6 @@
-# Aula 07 — 30/Set — Estágio 3 (Semana 1)
+# Aula 07 — 30/Set — Unidade 3 (1/2)
 
-## Retomando da aula (e do Estágio) anterior
+## Retomando da aula (e do Unidade) anterior
 
 Na aula passada concluímos `calc`, nossa LP de expressões infixas com
 aritmética simples. 

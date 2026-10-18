@@ -1,4 +1,4 @@
-# Aula 06 — 28/Set — Estágio 2 (Semana 3)
+# Aula 06 — 28/Set — Unidade 2 (4/4)
 
 ## Retomando da aula anterior
 

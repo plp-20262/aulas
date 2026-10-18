@@ -1,6 +1,6 @@
-# Aula 08 — 04/Out — Estágio 3 (Semana 2)
+# Aula 08 — 04/Out — Unidade 3 (2/2)
 
-## Retomando da aula (e do Estágio) anterior
+## Retomando da aula (e do Unidade) anterior
 
 Na aula passada, retomamos o foco em semântica. Formalizamos a especificação da
 semântica de nossa segunda linguagem `calc`, usando semântica de avaliação (ou
@@ -120,7 +120,7 @@ adicionadas a duas das regras sintáticas, em comparação com a sintaxe da últ
 versão de `calc`.
 
 ```python
-exp   ::= let ID = exp in exp                      ← NOVA SINTAXE
+exp   ::= let NOME = exp in exp                      ← NOVA SINTAXE
         | termo { ( + | - ) termo }
 termo ::= fator { ( * | / ) fator }
 fator ::= unario [ ** fator ]

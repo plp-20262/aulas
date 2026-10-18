@@ -1,4 +1,4 @@
-# Aula 02
+# Aula 02 — 14/Set — Unidade 1 (2/2)
 
 ## Parte 1: revisão do conteúdo visto
 
