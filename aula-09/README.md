@@ -89,7 +89,7 @@ linguagem só nos permite abstrair o **resultado**.
 | B | `[x, y] => exp`    | ⚠️ `[` (frágil se listas chegarem) | ⚠️ média                               | ✅ `[x: int, y: float] => ... : float` | ❌ compromete      | precisa parênteses |
 | C | `[x, y => exp]`    | ✅ `[`                            | ⚠️ baixa                               | ❌ interação ruim com tipo de retorno  | ❌ compromete      | **sem parênteses** |
 | D | `(x, y) => exp`    | ❌ ambíguo com parênteses         | ✅ máxima                             | ✅                                     | ✅ livre           | precisa parênteses |
-| D | `λx. λy. => exp`   |                                   |                                       |                                        |                    |                    |
+| E | `λx. λy. => exp`   |                                   |                                       |                                        |                    |                    |
 
 Exemplos concretos de aplicação para cada forma:
 
