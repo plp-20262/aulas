@@ -285,7 +285,7 @@ Mostrar que, com o ambiente de criação capturado, `a` é resolvido corretament
 
 > Uma outra forma de resolver `a` seria consultar o ambiente de quem chama, no
 > momento da aplicação. Isso se chama **escopo dinâmico**. Vamos discutir na
-> Aula 11 por que não é o que queremos.
+> Aula 12 por que não é o que queremos.
 
 ### 4.5 Regra operacional informal
 
@@ -392,8 +392,8 @@ let a = 20 in
 f(5)   # léxico: 15 | dinâmico: 25
 ```
 
-**Anunciar:** essa diferença será o tema central da Aula 11. Por ora,
-registrar: *"o `aljabr` usa escopo léxico; veremos por quê na Aula 11."*
+**Anunciar:** essa diferença será o tema central da Aula 12. Por ora,
+registrar: *"o `aljabr` usa escopo léxico; veremos por quê na Aula 12."*
 
 
 ## Bloco 6:  Fechamento, currying e ponte
@@ -441,10 +441,10 @@ mágica.
 > notacional. Poderíamos ter escolhido um parâmetro por vez, como faz o lambda
 > cálculo, e ainda assim expressar tudo o que expressamos hoje. O que
 > ganharíamos: regras semânticas um pouco mais simples. O que perderíamos:
-> legibilidade. Veremos na Aula 10 como implementar isso, e aí a diferença fica
+> legibilidade. Veremos na Aula 11 como implementar isso, e aí a diferença fica
 > concreta."
 
-### 6.3 Ponte para a Aula 10
+### 6.3 Ponte para a Aula 11
 
 Anunciar: na próxima aula, o closure vira uma tripla Python concreta e o
 avaliador é estendido para `Lambda` e `App`. A regra operacional do Bloco 4.5
@@ -452,7 +452,7 @@ será o roteiro da implementação.
 
 ### 6.4 Exercícios de fixação
 
-Propor para entrega antes da Aula 10:
+Propor para entrega antes da Aula 11:
 
 1. Escrever a AST de `fn (x, y) => x * x + y`.
 
