@@ -106,9 +106,9 @@ exp ::= INTEIRO                    (número inteiro)
       | exp1 - exp2                (subtração)
       | exp1 * exp2                (multiplicação)
       | exp1 / exp2                (divisão inteira)
-      | exp1 ** exp2               (divisão inteira)
-      | + exp1                     (divisão inteira)
-      | - exp1                     (divisão inteira)
+      | exp1 ** exp2               (exponenciação)
+      | + exp1                     (+ unário)
+      | - exp1                     (- unário)
       | (exp)                      (parênteses)
 ```
 
