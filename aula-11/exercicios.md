@@ -2,19 +2,13 @@
 
 Resolva antes da próxima aula.
 
-1. Tokenize `(fn (x, y) => x + y)(2, 3)`.
+1. `[q16]` Tokenize `(fn (x, y) => x + y)(2, 3)`.
 
-2. Desenhe a árvore de sintaxe abstrata de `fn (x) => x + 1 (2)` e de
+2. `[q17]` Desenhe a árvore de sintaxe abstrata de `fn (x) => x + 1 (2)` e de
    `-f(2) ** 2`. O que você observa na primeira? O que acontece quando essa
    lambda é aplicada a um argumento?
 
-3. Qual o resultado do programa abaixo? Explique como o resultado é obtido, com
-   base na semântica informal, intencional que especificamos.
-
-   ```text
-   ```
-
-4. Para cada programa abaixo, diga o resultado e justifique com base nas
+3. Para cada programa abaixo, diga o resultado e justifique com base nas
    regras:
 
    ```text
@@ -36,8 +30,8 @@ Resolva antes da próxima aula.
    e) let f = fn (n) => f(n) in f(1)
    ```
 
-5. **(Desafio)** Qual o resultado do programa abaixo? Faça a derivação das
-   primeiras aplicações. O que há de diferente em relação aos exemplos da
+4. `[q18]`**(Desafio)** Qual o resultado do programa abaixo? Faça a derivação
+   das primeiras aplicações. O que há de diferente em relação aos exemplos da
    aula?
 
    ```text
@@ -45,14 +39,22 @@ Resolva antes da próxima aula.
    aplica2(fn (x) => x * x, 3)
    ```
 
-6. **(Desafio)** No exercício 4e, o programa dá erro porque `f` não está no
-   ambiente do closure. O que precisaria mudar na regra (Let) para que `f`
-   pudesse enxergar a si mesma? Que problema aparece ao tentar descrever o
+5. `[q19]` **(Desafio)** No exercício 3e, o programa dá erro porque `f` não
+   está no ambiente do closure. O que precisaria mudar na regra (Let) para que
+   `f` pudesse enxergar a si mesma? Que problema aparece ao tentar descrever o
    ambiente de criação desse closure? (Dica: o closure precisaria conter um
    ambiente que contém o próprio closure.)
 
-7. **(Desafio extra)** O lexer de `aljabr` já reconhece o token `?` (entrada de
-   dados), mas o parser ainda não o aceita. Estenda a gramática EBNF desta aula
-   para incluí-lo e decida onde ele deve ficar na hierarquia de precedência.
+6. `[q20]`**(Desafio extra)** O lexer de `aljabr` já reconhece o token `?`
+   (entrada de dados), mas o parser ainda não o aceita. Estenda a gramática
+   EBNF desta aula para incluí-lo e decida onde ele deve ficar na hierarquia de
+   precedência.
 
-
+7. `[q21]` Faça uma cópia completa do diretório de `aljabr-v1` para o diretório
+   `q21/aljabr-v2` (atenção, o nome de versão deste diretório deve ser `v2`,
+   mesmo você tendo que copiar a versão `v1`). Faça o commit inicial conter
+   *exatamente* os arquivos originais de `aljabr-v1` (sem nenhuma mudança).
+   Somente depois disso, faça as mudanças especificadas para a linguagem nesta
+   aula. Neste momento, seu foco devem ser os níveis léxico e sintático (que é
+   o que vimos nesta aula). Mas vale a pena você tentar antecipar a
+   implementação da semântica (da função `eval`). 
