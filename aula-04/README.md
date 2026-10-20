@@ -366,7 +366,7 @@ def parse_argumentos(stream):
         return erro
 
     # argumentos = parse_argumentos(stream)
-    erro = argumentos = parse_arg(stream)
+    erro = argumentos = parse_argumentos(stream)
     if isinstance(erro, Erro):
         return erro
 
