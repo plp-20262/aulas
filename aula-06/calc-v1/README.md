@@ -30,7 +30,7 @@ queremos criar um parser LL(1), ou seja, que só olha um token à frente.
 Comecemos da menor regra: `atomo`. Vamos criar `parse_atomo()`. A regra tem
 duas produções: a primeira tendo apenas um terminal `INTEIRO` e a segunda sendo
 a sequência de um terminal `(`, seguido pelo não-erminal `exp` e, por fim, mais
-um terminal `(`. A decisão, portanto de qual aplicar pode ser feita apenas
+um terminal `)`. A decisão, portanto de qual aplicar pode ser feita apenas
 olhando o primeiro token do stream: se é um `INTEIRO` ou um `(`.
 
 ```python
