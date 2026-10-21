@@ -64,3 +64,15 @@ def parse_code(code: str):
     if isinstance(res, Erro):
         return res
     return parser(res)
+
+
+def run(code: str):
+    """Tokeniza, parseia e avalia um programa-fonte em ambiente vazio.
+
+    Devolve o valor resultante ou um Erro. Usado pelos testes ponta-a-ponta
+    da tabela de programas da §4.4 do README (v2).
+    """
+    ast = parse_code(code)
+    if isinstance(ast, Erro):
+        return ast
+    return eval(ast, {})

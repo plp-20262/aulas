@@ -2,9 +2,11 @@ import re
 from tipos import Token, TokenType, Erro
 
 # Palavras reservadas: mapeamento de lexema -> TokenType
+# aljabr v2 (§1): há apenas três na linguagem: `let`, `in` e `fn`.
 RESERVADAS = {
     "let": TokenType.LET,
     "in": TokenType.IN,
+    "fn": TokenType.FN,
 }
 
 # Mapeamento de regras léxicas (Ordem prioritária)
@@ -27,7 +29,13 @@ TOKEN_SPEC = [
     ("INPUT",    r"\?"),
     ("LPAREN",   r"\("),
     ("RPAREN",   r"\)"),
+    # aljabr v2 (§1): ARROW (`=>`) deve vir ANTES de EQUAL (`=`), senão a
+    # regex única casaria `=` e deixaria um `>` órfão como MISMATCH. É a
+    # mesma razão pela qual `**` vem antes de `*`.
+    ("ARROW",    r"=>"),
     ("EQUAL",    r"="),
+    # aljabr v2 (§1): COMMA — separa os itens de params e de args
+    ("COMMA",    r","),
     ("INTEIRO",  r"\d+"),
     ("NOME",     r"[a-z_][a-z0-9_]*"),
     ("SPACE",    r"[ \t\n\r]+"),

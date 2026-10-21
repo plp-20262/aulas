@@ -19,6 +19,11 @@ class TokenType(Enum):
     LET = auto()
     IN = auto()
     EQUAL = auto()
+    # aljabr v2 (§1): três novas categorias léxicas para lambdas e
+    # aplicações: FN (palavra reservada `fn`), ARROW (`=>`) e COMMA (`,`)
+    FN = auto()
+    ARROW = auto()
+    COMMA = auto()
 
 @dataclass(frozen=True)
 class Token:
@@ -63,6 +68,10 @@ NOME     = match_type(TokenType.NOME)
 LET      = match_type(TokenType.LET)
 IN       = match_type(TokenType.IN)
 EQUAL    = match_type(TokenType.EQUAL)
+# aljabr v2 (§1): predicados das novas categorias
+FN       = match_type(TokenType.FN)
+ARROW    = match_type(TokenType.ARROW)
+COMMA    = match_type(TokenType.COMMA)
 
 # Predicados para grupos de operadores
 OPERADOR = match_type(

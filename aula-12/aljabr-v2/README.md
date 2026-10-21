@@ -1,74 +1,87 @@
 # Especificação de `aljabr`
 
-Principais mudanças na especificação da LP `aljabr` em comparação a `calc`:
+A principal mudança na especificação da LP `aljabr` versão `v2` em comparação à
+versão `v1` é a inclusão de lambdas e closures.
 
-- inclui categoria léxica para variáveis (categoria `NOME`)
-- inclui a sintaxe para vinculações: `let..in`
+## 1. Léxico
 
-## Léxico
+A linguagem `aljabr` versão `v2` inclui três novas categorias léxicas: `FN`,
+`ARROW` e `COMMA`, as três necessárias para dar suporte a expressões e
+aplicações de funções lambda. O conjunto de categorias léxias completo de
+`aljabr` v2 fica assim:
 
-A linguagem inclui variáveis que, no léxico, serão chamadas de `NOME`s (tal
-como é feito em Python). Um nome é simplesmente um identificador formado por
-letras minúsculas, dígitos e `_` (sublinha), nunca iniciados por dígito.
-
-NOME REGEX: `r'^[a-z_][a-z0-9_]*$'`
-
-Também precisaremos adicionar duas palavras-reservadas: `let` e `in`. O Lexer
-terá tokens apropriados para cada uma das palavras reservadas.
-
-> A estratégia no LEXER será adicionar a categoria sintática `NOME` com a
-> especificação acima. Além disso, manter um mapa de palavras reservadas.
-> Depois do match de um `NOME`, podemos checar se se trata de uma palavra
-> reservada e retornamos o token apropriado.
-
-## Sintaxe
-
-### Conceitual, idealizada
-
-```python
-exp ::= INTEIRO                    (número inteiro)
-      | NOME                       (identificador/variável)     ← NOVA SINTAXE
-      | let NOME = exp1 in exp2    (vinculação local)           ← NOVA SINTAXE
-      | exp1 + exp2                (soma)
-      | exp1 - exp2                (subtração)
-      | exp1 * exp2                (multiplicação)
-      | exp1 / exp2                (divisão inteira)
-      | exp1 ** exp2               (exponenciação)
-      | + exp1                     (+ unário)
-      | - exp1                     (- unário)
-      | (exp)                      (parênteses)
+```text
+POW      ::=  \*\*
+ADD      ::=  \+
+SUB      ::=  -
+MULT     ::=  \*
+DIV      ::=  /
+LPAREN   ::=  \(
+RPAREN   ::=  \)
+ARROW    ::=  =>                     ← NOVO
+EQUAL    ::=  =
+COMMA    ::=  ,                      ← NOVO
+INTEIRO  ::=  [0-9]+
+NOME     ::=  [a-z_][a-z0-9_]*       (exceto as palavras reservadas)
 ```
 
-### EBNF efetiva usada
+**Palavras reservadas** Há apenas três na linguagem: `let`, `in` e `fn`. 
+
+A ordem das regras importa e é a indicada acima, para garantir que o lexer não
+confunda `=>` com um `=` seguido por um `>` ou o `**` com dois `*`.
+
+## 2. Sintaxe
+
+Esta é a EBNF efetiva a usar para derivar o parser.
 
 ```python
-exp   ::= let NOME = exp in exp | termo { ( + | - ) termo }
-termo ::= fator { ( * | / ) fator }
-fator ::= unario [ ** fator ]
-unario::= [ + | - ] atomo
-atomo ::= INTEIRO | NOME | ( exp )            
+exp     ::= let NOME = exp in exp
+          | fn LPAREN [ params ] RPAREN => exp                      ← NOVO
+          | termo { ( + | - ) termo }
+termo   ::= fator { ( * | / ) fator }
+fator   ::= unario [ ** fator ]
+unario  ::= [ + | - ] chamada                                       ← ALTERADO
+chamada ::= atomo { LPAREN [ args ] RPAREN }                        ← NOVO
+atomo   ::= INTEIRO | NOME | LPAREN exp RPAREN
+params  ::= NOME { , NOME }                                         ← NOVO
+args    ::= exp { , exp }                                           ← NOVO
 ```
 
-## Semântica Operacional Big-Step de `aljabr-v1`
+## 3. Semântica 
 
-### Domínios Semânticos
+A semântica é expressa no estilo semântica operacional big-step (ou semântica
+natural), baseada em regras de derivação. Abaixo definimos os domínios
+semânticos necessários. Observe que apenas precisamos incluir o conjunto
+$\mathrm{Clo}$, o conjunto de closures.
 
-| Domínio                                       | Descrição                                                                  |
-|-----------------------------------------------|----------------------------------------------------------------------------|
-| $ℝ$                                           | Os números reais.                                                          |
-| $\mathrm{Val} = ℝ ∪ \\{ \mathtt{erro} \\}$    | *Os valores possíveis*: os reais ou o valor especial `erro`                |
-| $\mathit{Env} = \mathit{Var} ⇀ \mathit{Val}$  | Domínio dos ambientes (estado semântico)                                   |
+| Domínio                                                                          | Descrição                                            |
+|----------------------------------------------------------------------------------|------------------------------------------------------|
+| $ℝ$                                                                              | Os números reais.                                    |
+| $\mathrm{Clo} = \mathrm{Var}^* \times \mathrm{Exp} \times \mathrm{Env}$          | _Closures_: (parâmetros, corpo, ambiente de criação) |
+| $\mathrm{Val} = ℝ ∪ \mathrm{Clo} ∪ \\{ \mathtt{erro} \\}$                        | Valores possíveis                                    |
+| $\mathrm{Env} = \mathrm{Var} ⇀ \mathrm{Val}$                                     | Ambientes                                            |
 
-> **Nota:** `Var` é o conjunto (infinito) de identificadores válidos da linguagem.
+Um closure é essencialmente uma tripla. Contudo usaremos uma notação mais
+legível e bastante usada para expressar domínios semânticos: closures serão
+expressos como $\mathsf{clo}((p_1, \ldots, p_n),\, e,\, \rho)$. A parte
+$\mathsf{clo}$ é apenas para melhorar a legibilidade.
+
+**Notação.** Para vincular vários parâmetros de uma vez, usaremos a extensão
+sucessiva do ambiente:
+
+$$
+\rho[p_1 \mapsto v_1, \ldots, p_n \mapsto v_n]
+= (\cdots(\rho[p_1 \mapsto v_1])[p_2 \mapsto v_2] \cdots)[p_n \mapsto v_n]
+$$
 
 ### Operações Semânticas e Operadores
 
-Para simplificar as regras de inferência, usarei apenas operações semânticas
-totais, obtidas através de um _lift_. Ou seja, as operações retornarão
-$\mathrm{erro}$ para todo valor do domínio em que a original está indefinida.
-As funções lifted também devem propagar erros em estilo monádico. Esta decisão
-permite eliminar as regras de inferência para lidar com erros de funções
-parciais e as regras de propação de erro.
+Mais uma vez, para simplificar as regras de inferência, usarei apenas operações
+semânticas totais, obtidas através de um _lift_. Ou seja, as operações
+retornarão $\mathrm{erro}$ para todo valor do domínio em que a original esteja
+indefinida. As funções lifted também devem propagar erros em estilo monádico.
+Esta decisão permite eliminar as regras de inferência para lidar com erros de
+funções parciais e as regras de propação de erro.
 
 **Notação** Nos referiremos às operações semânticas com a notação
 $f_{\text{op}}$ (original) e $f_{\text{op}}^{\uparrow}$ (_lifted_), para à
@@ -113,51 +126,18 @@ convencional de lógica matemática, computabilidade e funções parciais).
 
 ### Regras de Avaliação
 
-#### Números
+#### Regras herdadas de aljbr versão v1
+
+As regras abaixo são transcritas da especificação da versão v1 de `aljabr`.
+Ressalvo que usamos usamos o ambiente _lifted_, o que nos permite dispensar a
+regra (VarNaoLigada) vista e apresentada na especificação anterior, apenas como
+alternativa, caso não usássemos _lift_. 
 
 $$
 \frac{}{\langle n, \rho \rangle \Downarrow n} \quad \text{(Num)}
-$$
-
-
-#### Operações Aritméticas
-
-Para cada operador binário `Op ∈ {+, -, *, /, **}`:
-
-$$
-\frac{
-  \langle e_1, \rho \rangle \Downarrow v_1 \qquad
-  \langle e_2, \rho \rangle \Downarrow v_2 \qquad
-  f_{\mathrm{Op}}^{\uparrow}(v_1,v_2) = v
-}{
-  \langle e_1 \text{ Op } e_2, \rho \rangle \Downarrow v
-} \quad \text{(Op)}
-$$
-
-
-#### Variável
-
-$$
+\qquad
 \frac{\rho(x) = v}{\langle x, \rho \rangle \Downarrow v} \quad \text{(Var)}
 $$
-
-Se o ambiente associa `x` a `v`, então `x` avalia para `v`.
-
-
-#### Variável Não Vinculada (Erro)
-
-$$
-\frac{x \notin \mathrm{dom}(\rho)}{\langle x, \rho \rangle \Downarrow \mathbf{erro}} \quad \text{(VarNaoLigada)}
-$$
-
-Se `x` não está no domínio de `ρ`, a avaliação resulta em `erro`. Isso
-generaliza o tratamento de erro já presente em `aljabr`.
-
-> **Importante** Se optarmos por usar a versão _lifted_ de $ρ$, esta regra é
-> desnecessária, já que o valor de $ρ(x)$ é $\mathrm{erro}$ quando $x$ não
-> estiver no domínio de $ρ$.
-
-#### Vinculação Local (`let`)
 
 $$
 \frac{
@@ -168,114 +148,276 @@ $$
 } \quad \text{(Let)}
 $$
 
-Ou seja, para avaliar `let x = e1 in e2`:
+$$
+\frac{
+  \langle e_1, \rho \rangle \Downarrow v_1 \qquad
+  \langle e_2, \rho \rangle \Downarrow v_2
+}{
+  \langle e_1 \text{ op } e_2, \rho \rangle \Downarrow f_{\mathrm{op}}^{\uparrow}(v_1, v_2)
+} \quad \text{(Op)}
+$$
 
-1. avaliamos `e1` no ambiente **corrente** `ρ`, obtendo `v1`;
-2. avaliamos `e2` no ambiente **estendido** `ρ[x ↦ v1]`, obtendo `v2`;
-3. o resultado é `v2`.
+(As regras dos operadores unários são análogas.) Lembre que $f^{\uparrow}$ é o
+_lift_ da operação parcial $f$:
 
-Observe que:
+$$
+f^{\uparrow}(v_1, v_2) =
+\begin{cases}
+f(v_1, v_2) & \text{se } v_1, v_2 \in ℝ \text{ e } (v_1, v_2) \in \mathrm{dom}(f) \\
+\mathtt{erro} & \text{caso contrário}
+\end{cases}
+$$
 
-- o ambiente `ρ` **não é modificado**: `ρ[x ↦ v1]` é uma nova função;
-- `e1` é avaliada **antes** de `x` ser vinculada, portanto `x` **não** está em
-escopo dentro de `e1` (o `let` **não é recursivo**);
-- o escopo de `x` é **estritamente** o corpo `e2`.
+> **Observe:** como $\mathrm{Val}$ agora inclui closures, o "caso contrário"
+> do _lift_ cobre também as operações aritméticas aplicadas a funções. Não
+> precisaremos de nenhuma regra nova para `q + 1` quando `q` for uma função: o
+> _lift_ que já tínhamos produz `erro`.
 
-# Como testar e executar `aljabr`
+**Ambiente _lifted_.** Como na especificação anterior, usamos uma versão
+_lifted_ de `ρ`: para toda variável `x ∉ dom(ρ)`, definimos `ρ(x) = erro`.
+Assim, a regra ($\mathrm{Var}$) cobre também as variáveis não vinculadas, e não
+precisamos de uma regra à parte para isso.
 
-Todas as instruções abaixo assumem que você está no diretório deste
-projeto (`aula-08/aljabr-v1`).
+**Convenção de propagação de erro.** As regras desta unidade descrevem apenas
+o caso em que as premissas produzem valores "de verdade" (elementos de
+$ℝ ∪ \mathrm{Clo}$). Para os demais casos, adotamos uma convenção, declarada
+uma única vez, válida para todas as regras:
 
-## Pré-requisitos
+> se alguma premissa da forma $⟨e, ρ⟩ ⇓ v$ produz $v = \mathbf{erro}$, a regra
+> não se aplica e a conclusão é $\mathbf{erro}$.
 
-- Python 3.10 ou mais recente;
-- `pytest` instalado (caso ainda não esteja):
+Esta convenção abrevia as regras de propagação que teríamos que escrever uma a
+uma, para cada construção da linguagem. Trata-se do equivalente formal ao
+tratamento monádico de erros da implementação: o erro interrompe a avaliação
+assim que aparece (erros são **estritos**). Em particular, `let x = 1/0 in 5`
+vale `erro`, e não `5`.
 
-```bash
-python3 -m pip install pytest
+#### Regras novas para definição e aplicação de funções
+
+**Criação de closure.** Um lambda avalia para um closure que captura e
+"congela" o ambiente corrente:
+
+$$
+\frac{}{
+  \langle \texttt{fn}\ (p_1, \ldots, p_n) \Rightarrow e,\ \rho \rangle
+  \Downarrow
+  \mathsf{clo}((p_1, \ldots, p_n),\ e,\ \rho)
+} \quad \text{(Lam)}
+$$
+
+**Aplicação.**
+
+$$
+\frac{
+  \begin{matrix}
+  \langle e_f, \rho \rangle \Downarrow \mathsf{clo}((p_1, \ldots, p_n), e_b, \rho_0) \\
+  \rule{0pt}{6ex}
+  \langle a_i, \rho \rangle \Downarrow v_i \quad (1 \le i \le n) \\
+  \rule{0pt}{6ex}
+  \langle e_b, \rho_0[p_1 \mapsto v_1, \ldots, p_n \mapsto v_n] \rangle \Downarrow v \\
+  \rule{0pt}{3ex}
+  \end{matrix}
+}{
+  \langle e_f(a_1, \ldots, a_n), \rho \rangle \Downarrow v
+} \quad \text{(App)}
+$$
+
+#### Regras de erro da aplicação
+
+Há duas maneiras de uma aplicação **originar** um erro, uma por regra. Os erros
+que apenas se _propagam_ (um argumento que avalia para `erro`, ou um corpo que
+resulta em `erro`) não precisam de regra própria: são cobertos pela convenção
+de erros já mencionada e pela própria regra (App), cujo valor é o valor do
+corpo.
+
+**Aplicar algo que não é função:**
+
+$$
+\frac{
+  \langle e_f, \rho \rangle \Downarrow v_f \qquad v_f \notin \mathrm{Clo}
+}{
+  \langle e_f(a_1, \ldots, a_m),\ \rho \rangle \Downarrow \mathbf{erro}
+} \quad \text{(AppNaoFuncao)}
+$$
+
+**Número errado de argumentos:**
+
+$$
+\frac{
+  \langle e_f, \rho \rangle \Downarrow \mathsf{clo}((p_1, \ldots, p_n),\ e_b,\ \rho_0)
+  \qquad m \neq n
+}{
+  \langle e_f(a_1, \ldots, a_m),\ \rho \rangle \Downarrow \mathbf{erro}
+} \quad \text{(AppAridade)}
+$$
+
+Observe duas escolhas de projeto:
+
+- a **aridade é verificada antes** de avaliar os argumentos (passo 2 antes do
+  passo 3 da Aula 09);
+- `erro` não pode ser passado como argumento: um argumento que avalia para
+  `erro` interrompe a aplicação, pela convenção de propagação da Seção 4.2. Assim,
+  as três regras de aplicação, (App), (AppNaoFuncao) e (AppAridade), são
+  mutuamente exclusivas.
+
+
+## 4. Como derivar a implementação da especificação
+
+> Nesta seção, apenas o mapa. A implementação de referência será apresentada
+> no início da Aula 12. Use este mapa para implementar você mesmo.
+
+### 4.1 Léxico → lexer
+
+| Especificação                          | Implementação                                             |
+|----------------------------------------|-----------------------------------------------------------|
+| três novas categorias léxicas          | três novos tipos de token e três novas entradas na lista de regras |
+| `=>` antes de `=`                      | posição de `ARROW` na lista, antes de `EQUAL`             |
+| `fn` é palavra reservada               | nova entrada no mapa de palavras reservadas               |
+
+### 4.2 EBNF → parser
+
+Relembre a correspondência entre EBNF e funções do parser (Aulas 04 e 05):
+
+| Na EBNF         | Parser descendente recursivo                                  |
+|-----------------|---------------------------------------------------------------|
+| `{ X }`         | `while` o próximo token pode iniciar `X`                      |
+| `[ X ]`         | `if` o próximo token pode iniciar `X`                         |
+| terminal `T`    | `expect(T)`                                                   |
+| não-terminal    | chamada à função correspondente                               |
+
+E o que muda nas regras da gramática:
+
+| Regra                       | Função do parser                                         |
+|-----------------------------|----------------------------------------------------------|
+| `exp` (alternativa `fn`)    | em `parse_exp`: se o próximo token é `FN`, chama `parse_lambda` |
+| `params`                    | nova: `parse_params`                                     |
+| `args`                      | nova: `parse_args`                                       |
+| `chamada`                   | nova: `parse_chamada`                                    |
+| `unario`                    | passa a chamar `parse_chamada` em vez de `parse_atomo`   |
+
+Como exemplo da derivação mecânica, eis o pseudo-código de `parse_chamada`:
+
+```python
+def parse_chamada(stream):
+    """chamada ::= atomo { LPAREN [ args ] RPAREN }"""
+    ast = parse_atomo(stream)
+    while peek(LPAREN):               # { … } vira while
+        expect(LPAREN)
+        args = []
+        if not peek(RPAREN):          # [ … ] vira if
+            args = parse_args(stream)
+        expect(RPAREN)
+        ast = App(ast, args)          # agrupamento à esquerda: f(1)(2) = (f(1))(2)
+    return ast
 ```
 
-## Testar
+As funções `parse_lambda`, `parse_params` e `parse_args` seguem o mesmo método
+(ficam como exercício). A gramática continua sendo LL(1): `FN` decide a
+alternativa de `exp`; `NOME` ou `RPAREN` decidem se há `params` ou `args`; e
+um `LPAREN` logo após um `atomo` só pode iniciar uma aplicação.
 
-A suíte de testes fica no diretório `tests/` e é dividida em cinco arquivos:
+> **Questão de projeto (pense antes de implementar):** a AST que construímos
+> até aqui é feita de listas, e o `eval` decide qual regra aplicar olhando a
+> forma da lista (seu primeiro elemento e seu tamanho). `Lambda` e `App`
+> também podem ter 2 ou 3 componentes. Como evitar que sejam confundidos com
+> operadores unários e binários?
 
-| Arquivo                    | O que testa                                                                      |
-|----------------------------|----------------------------------------------------------------------------------|
-| `tests/test_lexer.py`      | o tokenizador (literais, operadores, `NOME`, palavras reservadas, erros léxicos) |
-| `tests/test_parser.py`     | o parser de expressões aritméticas (bem formadas e erros)                        |
-| `tests/test_let_parser.py` | o parser das vinculações `let..in` (bem formadas e erros)                        |
-| `tests/test_eval.py`       | o avaliador `eval` (operadores, precedência, propagação de erros)                |
-| `tests/test_let_eval.py`   | o avaliador `eval` para variáveis e `let..in` |
+### 4.3 Regras de avaliação → eval
 
-Para rodar a suíte inteira:
+A assinatura de `eval` não muda: `eval(ast, env) -> Val`. Cada regra vira uma
+cláusula. Para a regra (App), leia as premissas como instruções:
 
-```bash
-python3 -m pytest tests
+| Parte da regra                                            | O que o `eval` faz                                              |
+|-----------------------------------------------------------|-----------------------------------------------------------------|
+| $\langle e_f, \rho \rangle \Downarrow \mathsf{clo}(\ldots)$ | avalia `e_f` em `env` e verifica que o resultado é um closure   |
+| $m \neq n$                                                | compara o número de argumentos com o de parâmetros              |
+| $\langle a_i, \rho \rangle \Downarrow v_i$                | avalia cada argumento em `env`, o ambiente **de chamada**       |
+| $\rho_0[p_1 \mapsto v_1, \ldots]$                         | cria um novo dicionário a partir do ambiente **do closure**     |
+| $\langle e_b, \ldots \rangle \Downarrow v$                | avalia o corpo no novo ambiente e devolve o resultado           |
+
+E para a regra (Lam): empacotar `(params, corpo, env)` em um closure, sem
+avaliar o corpo. Um closure é uma tripla; em Python, uma tupla ou uma
+`dataclass` imutável com três campos serve bem.
+
+Observe que as regras `AppNaoFuncao` e `AppAridade` correspondem aos dois
+pontos em que o `eval` _origina_ um `Erro` na aplicação. Já a propagação de
+erro (um argumento, ou o corpo, que resulta em `Erro`) é a convenção da §4.2: o
+`eval` apenas devolve o erro recebido, sem prosseguir. E lembre que o _lift_
+das operações já trata o caso de funções em expressões aritméticas.
+
+### 4.4 Conjunto de testes
+
+Use os programas abaixo para testar sua implementação.
+
+| Programa                                                           | Resultado |
+|--------------------------------------------------------------------|-----------|
+| `let quad = fn (x) => x * x in quad(3) + quad(5)`                  | `34`      |
+| `(fn (x, y) => x + y)(2, 3)`                                       | `5`       |
+| `(fn () => 42)()`                                                  | `42`      |
+| `(fn (x) => fn (y) => x + y)(2)(3)`                                | `5`       |
+| `let n = 7 in let soma_n = fn (x) => x + n in let n = 100 in soma_n(3)` | `10` |
+| `let f = fn (x) => x in -f(2)`                                     | `-2`      |
+| `let f = fn (x) => x in f(2) ** 2`                                 | `4`       |
+| `let f = fn (x, y) => x + y in f(1)`                               | `erro`    |
+| `5(3)`                                                             | `erro`    |
+| `let q = fn (x) => x in q + 1`                                     | `erro`    |
+| `let f = fn (x) => x + y in 10`                                    | `10`      |
+| `let f = fn (x) => x + y in f(1)`                                  | `erro`    |
+| `let x = 1/0 in 5`                                                 | `erro`    |
+| `(fn (x) => 5)(1/0)`                                               | `erro`    |
+
+E os programas abaixo devem ser **rejeitados pelo parser**:
+`fn x => x`, `fn (x,) => x`, `f(1,)`, `fn (x) x`, `1 + fn (x) => x`,
+`let fn = 1 in fn`.
+
+
+## Bloco 7: Prévia de escopo dinâmico e fechamento
+
+### 7.1 Uma diferença de um único símbolo
+
+Na regra (App), o corpo é avaliado em $\rho_0[\ldots]$, o ambiente de criação.
+Imagine uma outra regra, idêntica em tudo, exceto por uma letra:
+
+```math
+\frac{
+  \begin{array}{c}
+  \langle e_f, \rho \rangle \Downarrow \mathsf{xclo}((p_1, \ldots, p_n),\ e_b,\ \rho_0) \\
+  \rule{0pt}{6ex} \langle a_i, \rho \rangle \Downarrow v_i
+  \quad (1 \le i \le n) \\
+  \rule{0pt}{6ex} \langle e_b,\ \rho[p_1 \mapsto v_1, \ldots, p_n \mapsto v_n] \rangle \Downarrow v
+  \end{array}
+}{
+  \langle e_f(a_1, \ldots, a_n),\ \rho \rangle \Downarrow v
+} \quad \text{(AppDin)}
 ```
 
-Para rodar apenas um arquivo, ou um único teste:
+> **Pergunta à turma:** o que mudou? O que passa a acontecer com o programa
+> abaixo?
+>
+> ```text
+> let a = 10 in
+> let f = fn (x) => x + a in
+> let a = 20 in
+> f(5)          # (App): 15      (AppDin): 25
+> ```
+>
+> Observe que, com (AppDin), o ambiente `ρ₀` guardado no closure nunca é
+> usado. Seria ele ainda necessário?
 
-```bash
-python3 -m pytest tests/test_lexer.py
-python3 -m pytest tests/test_parser.py -k "unclosed_paren"
-```
+Essa é a diferença entre escopo **léxico** e escopo **dinâmico**, tema central
+da Aula 12. Por ora, registre: `aljabr` usa escopo léxico, e a Aula 12 mostra
+o que se perde e o que se ganha com a outra escolha.
 
-Espera-se algo como `146 passed, 2 xfailed`. Os dois `xfail` são testes que
-documentam **limitações conhecidas** do parser atual (erros de subparsers não
-são propagados em `parse_exp`/`parse_termo`); eles falham de propósito e
-devem começar a passar quando o parser for corrigido.
+### 7.2 Resumo
 
-Observações:
+Nestas duas últimas aula:
 
-- não há `pyproject.toml` nem `setup.py` neste diretório, de propósito: os
-  testes rodam direto da fonte. Por isso use sempre `python3 -m pytest`
-  (e não apenas `pytest`) e passe o diretório dos testes explicitamente;
-- **não rode `pytest` sem caminho a partir da raiz do repositório**: há
-  outro pacote chamado `tests/` em `aula-11/aljabr-v1` e a coleta
-  colidiria. Sempre especifique o caminho, por exemplo:
-  `python3 -m pytest aula-08/aljabr-v1/tests`.
+1. especificamos `aljabr` v2 nos três níveis: REGEX (3 novos tokens), EBNF
+   (lambda, aplicação, parâmetros e argumentos) e regras de avaliação (closure
+   e aplicação);
+2. vimos que a regra (App) concentra a decisão de design mais importante da
+   unidade: o corpo é avaliado no ambiente **de criação**, estendido com os
+   argumentos;
+3. vimos como cada especificação se traduz em uma parte da implementação.
 
-## Executar
-
-O interpretador é o arquivo `aljabr.py`. Ele aceita o programa de duas
-maneiras: lendo um arquivo cujo nome for passado como argumento, ou lendo
-da entrada padrão (`stdin`).
-
-A partir de um arquivo `.al`:
-
-```bash
-python3 aljabr.py prog1.al
-```
-
-```
-let x = 2 in
-let y = x ** 2 in
-let z = y + 1 in
-x + y + z
-
--->  11
-```
-
-A partir da entrada padrão (digite o programa e finalize com `Ctrl-D` no
-macOS/Linux, ou `Ctrl-Z Enter` no Windows):
-
-```bash
-python3 aljabr.py
-```
-
-Ou, de forma mais prática em scripts/pipe:
-
-```bash
-echo "let x = 1 in x + 2" | python3 aljabr.py
-```
-
-```
-let x = 1 in x + 2
-
--->  3
-```
-
-> O arquivo `prog2.al` ainda não é aceito pelo interpretador atual: ele usa
-> a sintaxe de funções (`[x, y => x + y]`), que será adicionada em uma aula
-> futura.
 

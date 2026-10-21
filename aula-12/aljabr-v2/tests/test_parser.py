@@ -109,9 +109,11 @@ class TestParserErrors:
         assert "tokens depois da expressão" in result.msg
 
     def test_two_expressions_consecutive(self, parse):
+        """aljabr v2 (§2): `(e1) (e2)` agora é uma APLICAÇÃO bem formada
+        (chamada ::= atomo { LPAREN [ args ] RPAREN }), não mais "tokens
+        depois da expressão". O parser aceita; o eval dirá não-função."""
         result = parse("(1 + 2) (3 - 4)")
-        assert isinstance(result, Erro)
-        assert "tokens depois da expressão" in result.msg
+        assert result == ["app", [token("+"), 1, 2], [[token("-"), 3, 4]]]
 
     def test_excess_closing_paren(self, parse):
         result = parse("(1 + 2))")
