@@ -34,6 +34,9 @@ class TestLexer:
         ("/", [TokenType.DIV]),
         ("**", [TokenType.POW]),
         ("=", [TokenType.EQUAL]),
+        # aljabr v3 (§1): operadores de comparação
+        ("==", [TokenType.EQEQ]),
+        ("<", [TokenType.LT]),
     ])
     def test_single_operators(self, code, expected_types):
         result = tokenizador(code)
@@ -55,6 +58,11 @@ class TestLexer:
     @pytest.mark.parametrize("code,expected_type", [
         ("let", TokenType.LET),
         ("in", TokenType.IN),
+        # aljabr v3 (§1): novas palavras reservadas
+        ("letrec", TokenType.LETREC),
+        ("if", TokenType.IF),
+        ("then", TokenType.THEN),
+        ("else", TokenType.ELSE),
     ])
     def test_reserved_words(self, code, expected_type):
         result = tokenizador(code)

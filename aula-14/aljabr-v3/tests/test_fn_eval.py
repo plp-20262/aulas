@@ -180,6 +180,10 @@ class TestLiftWithClosures:
         "2 ** q",
         "-q",
         "+q",
+        # aljabr v3 (§2): comparações também são lift — sobre closures dão erro
+        "q == q",
+        "q < q",
+        "1 == q",
     ])
     def test_arithmetic_on_closure_is_error(self, code):
         result = run(f"let q = fn (x) => x in {code}")

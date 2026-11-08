@@ -20,6 +20,11 @@ class TestEvalCore:
         ("**", 2, 3, 8),
         # Divisão produz float
         ("/", 7, 2, 3.5),
+        # aljabr v3 (§2): comparações — reusam o nó binário [Token, e1, e2]
+        ("==", 1, 1, 1),
+        ("==", 3, 4, 0),
+        ("<", 2, 5, 1),
+        ("<", 5, 2, 0),
     ])
     def test_binary_operators(self, eval_ast, env, op, a, b, expected):
         assert eval_ast([token(op), a, b], env) == expected
