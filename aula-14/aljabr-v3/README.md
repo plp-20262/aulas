@@ -1,14 +1,33 @@
 # Especificação de `aljabr`
 
-A principal mudança na especificação da LP `aljabr` versão `v2` em comparação à
-versão `v1` é a inclusão de lambdas e closures.
+A principal mudança na especificação da LP `aljabr` versão `v3` em comparação à
+versão `v2` é a inclusão do `se`, uma forma especial de expressão, e do
+`let-rec` outra forma especial de expressão que permite a definição recursiva
+de funções (lambdas que são imediatamente associados a um nome e cujo nome pode
+ser usado dentro do corpo do próprio lambda).
+
+IMPORTANTE: embora as duas inclusões acima introduzam os poderes de expressar a
+_seleção de caminhos de execução_ e de expressar repetições, através de
+recursividade explícita. O poder computacional da linguagem na versão `v2` já
+era Turing equivalente.
 
 ## 1. Léxico
 
-A linguagem `aljabr` versão `v2` inclui três novas categorias léxicas: `FN`,
-`ARROW` e `COMMA`, as três necessárias para dar suporte a expressões e
-aplicações de funções lambda. O conjunto de categorias léxias completo de
-`aljabr` v2 fica assim:
+Quatro novas palavras reservadas e dois novos operadores (as palavras
+reservadas passam a ser sete).
+
+```text
+LETREC  ::=  letrec           ← NOVO (palavra reservada)
+IF      ::=  if               ← NOVO (palavra reservada)
+THEN    ::=  then             ← NOVO (palavra reservada)
+ELSE    ::=  else             ← NOVO (palavra reservada)
+EQEQ    ::=  ==               ← NOVO
+LT      ::=  <                ← NOVO
+```
+
+Palavras reservadas: `let`, `in`, `fn`, `letrec`, `if`, `then`, `else`. As
+demais categorias léxicas continuam existindo, da mesma forma que eram na
+versão `v2`.
 
 ```text
 POW      ::=  \*\*
@@ -25,34 +44,53 @@ INTEIRO  ::=  [0-9]+
 NOME     ::=  [a-z_][a-z0-9_]*       (exceto as palavras reservadas)
 ```
 
-**Palavras reservadas** Há apenas três na linguagem: `let`, `in` e `fn`. 
-
-A ordem das regras importa e é a indicada acima, para garantir que o lexer não
-confunda `=>` com um `=` seguido por um `>` ou o `**` com dois `*`.
-
 ## 2. Sintaxe
 
-Esta é a EBNF efetiva a usar para derivar o parser.
+Vale mais uma vez a observação sobre notação: os parênteses da _linguagem_ são
+`LPAREN`/`RPAREN`; os parênteses `( … )` da EBNF são meta-símbolos.
 
-```python
+Abaixo a EBNF atualizada de `aljabr` versão `v3`.
+
+```text
 exp     ::= let NOME = exp in exp
-          | fn LPAREN [ params ] RPAREN => exp                      ← NOVO
-          | termo { ( + | - ) termo }
+          | letrec NOME = fn LPAREN [ params ] RPAREN => exp in exp      ← NOVO
+          | fn LPAREN [ params ] RPAREN => exp
+          | if exp then exp else exp                                    ← NOVO
+          | comp
+comp    ::= soma [ ( == | < ) soma ]                                    ← NOVO
+soma    ::= termo { ( + | - ) termo }          (antes, parte de exp)
 termo   ::= fator { ( * | / ) fator }
 fator   ::= unario [ ** fator ]
-unario  ::= [ + | - ] chamada                                       ← ALTERADO
-chamada ::= atomo { LPAREN [ args ] RPAREN }                        ← NOVO
+unario  ::= [ + | - ] chamada
+chamada ::= atomo { LPAREN [ args ] RPAREN }
 atomo   ::= INTEIRO | NOME | LPAREN exp RPAREN
-params  ::= NOME { , NOME }                                         ← NOVO
-args    ::= exp { , exp }                                           ← NOVO
+params  ::= NOME { , NOME }
+args    ::= exp { , exp }
 ```
+
+Mudanças em relação à `v2`:
+1. `exp` ganhou `letrec` e `if`;
+2. nasceu o nível `comp` entre `exp` e `soma`;
+3. o corpo que antes era de `exp` (`termo { (+|-) termo }`) passou a se chamar
+   `soma`.
+
+A gramática continua LL(1): `LETREC`, `IF`, `FN` e `LET` decidem a alternativa
+de `exp`; `==` ou `<` decidem se `comp` tem o lado direito opcional.
+
+### Exemplos de programas mal-formados
+
+| Programa                               | Por quê                                         |
+|----------------------------------------|-------------------------------------------------|
+| `1 < 2 < 3`                            | `comp` não é associativa                        |
+| `if x then 1`                          | `else` obrigatório                              |
+| `letrec x = 5 in x`                    | o lado direito de `letrec` precisa ser `fn`     |
+| `1 + if 1 then 2 else 3`               | `if` como operando sem parênteses               |
+| `let if = 1 in if`                     | `if` é palavra reservada                        |
+
 
 ## 3. Semântica 
 
-A semântica é expressa no estilo semântica operacional big-step (ou semântica
-natural), baseada em regras de derivação. Abaixo definimos os domínios
-semânticos necessários. Observe que apenas precisamos incluir o conjunto
-$\mathrm{Clo}$, o conjunto de closures.
+### Domínios semânticos: nenhuma mudança
 
 | Domínio                                                                          | Descrição                                            |
 |----------------------------------------------------------------------------------|------------------------------------------------------|
@@ -61,18 +99,72 @@ $\mathrm{Clo}$, o conjunto de closures.
 | $\mathrm{Val} = ℝ ∪ \mathrm{Clo} ∪ \\{ \mathtt{erro} \\}$                        | Valores possíveis                                    |
 | $\mathrm{Env} = \mathrm{Var} ⇀ \mathrm{Val}$                                     | Ambientes                                            |
 
-Um closure é essencialmente uma tripla. Contudo usaremos uma notação mais
-legível e bastante usada para expressar domínios semânticos: closures serão
-expressos como $\mathsf{clo}((p_1, \ldots, p_n),\, e,\, \rho)$. A parte
-$\mathsf{clo}$ é apenas para melhorar a legibilidade.
+$\mathrm{Val} = ℝ ∪ \mathrm{Clo} ∪
+\\{\mathtt{erro}\\}$ (decisão A, opção 2). As comparações são operações
+semânticas $f_{==}, f_{<} : ℝ \times ℝ \to \\{0, 1\\}$ e, como as demais, são
+levadas a $\mathrm{Val}$ pelo _lift_ (closures em comparações dão `erro`).
 
-**Notação.** Para vincular vários parâmetros de uma vez, usaremos a extensão
-sucessiva do ambiente:
+### Condicional
+
+Observe que só **um** caminho aparece nas premissas:
 
 $$
-\rho[p_1 \mapsto v_1, \ldots, p_n \mapsto v_n]
-= (\cdots(\rho[p_1 \mapsto v_1])[p_2 \mapsto v_2] \cdots)[p_n \mapsto v_n]
+\frac{
+  \langle c, \rho \rangle \Downarrow n \quad (n \in ℝ,\ n \neq 0) \qquad
+  \langle e_1, \rho \rangle \Downarrow v
+}{
+  \langle \texttt{if}\ c\ \texttt{then}\ e_1\ \texttt{else}\ e_2,\ \rho \rangle \Downarrow v
+} \quad \text{(IfVerd)}
 $$
+
+$$
+\frac{
+  \langle c, \rho \rangle \Downarrow 0 \qquad
+  \langle e_2, \rho \rangle \Downarrow v
+}{
+  \langle \texttt{if}\ c\ \texttt{then}\ e_1\ \texttt{else}\ e_2,\ \rho \rangle \Downarrow v
+} \quad \text{(IfFalso)}
+$$
+
+$$
+\frac{
+  \langle c, \rho \rangle \Downarrow v_c \qquad v_c \in \mathrm{Clo}
+}{
+  \langle \texttt{if}\ c\ \texttt{then}\ e_1\ \texttt{else}\ e_2,\ \rho \rangle \Downarrow \mathbf{erro}
+} \quad \text{(IfCond)}
+$$
+
+Se a condição avalia para `erro`, vale a convenção de propagação da Aula 12
+§4.2. O caminho não escolhido **nunca é avaliado**, logo seus erros e sua
+não-terminação nunca acontecem.
+
+### Recursão
+
+A regra define um ambiente em termos de si mesmo:
+
+$$
+\frac{
+  \rho_1 = \rho[f \mapsto \mathsf{clo}((p_1, \ldots, p_n),\ e_f,\ \rho_1)]
+  \qquad
+  \langle e_2, \rho_1 \rangle \Downarrow v
+}{
+  \langle \texttt{letrec}\ f = \texttt{fn}\ (p_1, \ldots, p_n) \Rightarrow e_f\ \texttt{in}\ e_2,\ \rho \rangle \Downarrow v
+} \quad \text{(LetRec)}
+$$
+
+Leitura: a primeira premissa não é uma avaliação, é uma **equação** que
+descreve $\rho_1$. Ele é o ambiente em que $f$ já existe e é o closure de $f$
+cujo ambiente de criação é... o próprio $\rho_1$. Logo, quando o corpo de $f$
+procura $f$, encontra.
+
+> **Retomada de observação da Aula 12 (§4.1)** Lá dissemos que closures são
+> construídos "de dentro para fora" e que isso voltaria com a recursão. Aqui
+> o ciclo é **genuíno**: o ambiente contém o closure, que contém o ambiente.
+> (Tecnicamente, $\rho_1$ é um ponto fixo; não precisamos desse formalismo.)
+>
+> Nenhuma outra regra muda. Em particular, (App) continua avaliando o corpo
+> em $\rho_0[\ldots]$: é o fato de $\rho_0 = \rho_1$ conter $f$ que faz a
+> recursão funcionar.
 
 ### Operações Semânticas e Operadores
 
@@ -168,11 +260,6 @@ f(v_1, v_2) & \text{se } v_1, v_2 \in ℝ \text{ e } (v_1, v_2) \in \mathrm{dom}
 \end{cases}
 $$
 
-> **Observe:** como $\mathrm{Val}$ agora inclui closures, o "caso contrário"
-> do _lift_ cobre também as operações aritméticas aplicadas a funções. Não
-> precisaremos de nenhuma regra nova para `q + 1` quando `q` for uma função: o
-> _lift_ que já tínhamos produz `erro`.
-
 **Ambiente _lifted_.** Como na especificação anterior, usamos uma versão
 _lifted_ de `ρ`: para toda variável `x ∉ dom(ρ)`, definimos `ρ(x) = erro`.
 Assim, a regra ($\mathrm{Var}$) cobre também as variáveis não vinculadas, e não
@@ -192,7 +279,7 @@ tratamento monádico de erros da implementação: o erro interrompe a avaliaçã
 assim que aparece (erros são **estritos**). Em particular, `let x = 1/0 in 5`
 vale `erro`, e não `5`.
 
-#### Regras novas para definição e aplicação de funções
+#### Regras de definição e aplicação de funções (herdadas de aljabr v2)
 
 **Criação de closure.** Um lambda avalia para um closure que captura e
 "congela" o ambiente corrente:
@@ -261,67 +348,6 @@ Observe duas escolhas de projeto:
   mutuamente exclusivas.
 
 
-## 4. Como derivar a implementação da especificação
-
-> Nesta seção, apenas o mapa. A implementação de referência será apresentada
-> no início da Aula 12. Use este mapa para implementar você mesmo.
-
-### 4.1 Léxico → lexer
-
-| Especificação                          | Implementação                                             |
-|----------------------------------------|-----------------------------------------------------------|
-| três novas categorias léxicas          | três novos tipos de token e três novas entradas na lista de regras |
-| `=>` antes de `=`                      | posição de `ARROW` na lista, antes de `EQUAL`             |
-| `fn` é palavra reservada               | nova entrada no mapa de palavras reservadas               |
-
-### 4.2 EBNF → parser
-
-Relembre a correspondência entre EBNF e funções do parser (Aulas 04 e 05):
-
-| Na EBNF         | Parser descendente recursivo                                  |
-|-----------------|---------------------------------------------------------------|
-| `{ X }`         | `while` o próximo token pode iniciar `X`                      |
-| `[ X ]`         | `if` o próximo token pode iniciar `X`                         |
-| terminal `T`    | `expect(T)`                                                   |
-| não-terminal    | chamada à função correspondente                               |
-
-E o que muda nas regras da gramática:
-
-| Regra                       | Função do parser                                         |
-|-----------------------------|----------------------------------------------------------|
-| `exp` (alternativa `fn`)    | em `parse_exp`: se o próximo token é `FN`, chama `parse_lambda` |
-| `params`                    | nova: `parse_params`                                     |
-| `args`                      | nova: `parse_args`                                       |
-| `chamada`                   | nova: `parse_chamada`                                    |
-| `unario`                    | passa a chamar `parse_chamada` em vez de `parse_atomo`   |
-
-Como exemplo da derivação mecânica, eis o pseudo-código de `parse_chamada`:
-
-```python
-def parse_chamada(stream):
-    """chamada ::= atomo { LPAREN [ args ] RPAREN }"""
-    ast = parse_atomo(stream)
-    while peek(LPAREN):               # { … } vira while
-        expect(LPAREN)
-        args = []
-        if not peek(RPAREN):          # [ … ] vira if
-            args = parse_args(stream)
-        expect(RPAREN)
-        ast = App(ast, args)          # agrupamento à esquerda: f(1)(2) = (f(1))(2)
-    return ast
-```
-
-As funções `parse_lambda`, `parse_params` e `parse_args` seguem o mesmo método
-(ficam como exercício). A gramática continua sendo LL(1): `FN` decide a
-alternativa de `exp`; `NOME` ou `RPAREN` decidem se há `params` ou `args`; e
-um `LPAREN` logo após um `atomo` só pode iniciar uma aplicação.
-
-> **Questão de projeto (pense antes de implementar):** a AST que construímos
-> até aqui é feita de listas, e o `eval` decide qual regra aplicar olhando a
-> forma da lista (seu primeiro elemento e seu tamanho). `Lambda` e `App`
-> também podem ter 2 ou 3 componentes. Como evitar que sejam confundidos com
-> operadores unários e binários?
-
 ### 4.3 Regras de avaliação → eval
 
 A assinatura de `eval` não muda: `eval(ast, env) -> Val`. Cada regra vira uma
@@ -344,80 +370,3 @@ pontos em que o `eval` _origina_ um `Erro` na aplicação. Já a propagação de
 erro (um argumento, ou o corpo, que resulta em `Erro`) é a convenção da §4.2: o
 `eval` apenas devolve o erro recebido, sem prosseguir. E lembre que o _lift_
 das operações já trata o caso de funções em expressões aritméticas.
-
-### 4.4 Conjunto de testes
-
-Use os programas abaixo para testar sua implementação.
-
-| Programa                                                           | Resultado |
-|--------------------------------------------------------------------|-----------|
-| `let quad = fn (x) => x * x in quad(3) + quad(5)`                  | `34`      |
-| `(fn (x, y) => x + y)(2, 3)`                                       | `5`       |
-| `(fn () => 42)()`                                                  | `42`      |
-| `(fn (x) => fn (y) => x + y)(2)(3)`                                | `5`       |
-| `let n = 7 in let soma_n = fn (x) => x + n in let n = 100 in soma_n(3)` | `10` |
-| `let f = fn (x) => x in -f(2)`                                     | `-2`      |
-| `let f = fn (x) => x in f(2) ** 2`                                 | `4`       |
-| `let f = fn (x, y) => x + y in f(1)`                               | `erro`    |
-| `5(3)`                                                             | `erro`    |
-| `let q = fn (x) => x in q + 1`                                     | `erro`    |
-| `let f = fn (x) => x + y in 10`                                    | `10`      |
-| `let f = fn (x) => x + y in f(1)`                                  | `erro`    |
-| `let x = 1/0 in 5`                                                 | `erro`    |
-| `(fn (x) => 5)(1/0)`                                               | `erro`    |
-
-E os programas abaixo devem ser **rejeitados pelo parser**:
-`fn x => x`, `fn (x,) => x`, `f(1,)`, `fn (x) x`, `1 + fn (x) => x`,
-`let fn = 1 in fn`.
-
-
-## Bloco 7: Prévia de escopo dinâmico e fechamento
-
-### 7.1 Uma diferença de um único símbolo
-
-Na regra (App), o corpo é avaliado em $\rho_0[\ldots]$, o ambiente de criação.
-Imagine uma outra regra, idêntica em tudo, exceto por uma letra:
-
-```math
-\frac{
-  \begin{array}{c}
-  \langle e_f, \rho \rangle \Downarrow \mathsf{xclo}((p_1, \ldots, p_n),\ e_b,\ \rho_0) \\
-  \rule{0pt}{6ex} \langle a_i, \rho \rangle \Downarrow v_i
-  \quad (1 \le i \le n) \\
-  \rule{0pt}{6ex} \langle e_b,\ \rho[p_1 \mapsto v_1, \ldots, p_n \mapsto v_n] \rangle \Downarrow v
-  \end{array}
-}{
-  \langle e_f(a_1, \ldots, a_n),\ \rho \rangle \Downarrow v
-} \quad \text{(AppDin)}
-```
-
-> **Pergunta à turma:** o que mudou? O que passa a acontecer com o programa
-> abaixo?
->
-> ```text
-> let a = 10 in
-> let f = fn (x) => x + a in
-> let a = 20 in
-> f(5)          # (App): 15      (AppDin): 25
-> ```
->
-> Observe que, com (AppDin), o ambiente `ρ₀` guardado no closure nunca é
-> usado. Seria ele ainda necessário?
-
-Essa é a diferença entre escopo **léxico** e escopo **dinâmico**, tema central
-da Aula 12. Por ora, registre: `aljabr` usa escopo léxico, e a Aula 12 mostra
-o que se perde e o que se ganha com a outra escolha.
-
-### 7.2 Resumo
-
-Nestas duas últimas aula:
-
-1. especificamos `aljabr` v2 nos três níveis: REGEX (3 novos tokens), EBNF
-   (lambda, aplicação, parâmetros e argumentos) e regras de avaliação (closure
-   e aplicação);
-2. vimos que a regra (App) concentra a decisão de design mais importante da
-   unidade: o corpo é avaliado no ambiente **de criação**, estendido com os
-   argumentos;
-3. vimos como cada especificação se traduz em uma parte da implementação.
-
-
