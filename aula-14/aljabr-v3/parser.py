@@ -1,6 +1,7 @@
 from tipos import Ast, Erro, monadic_error, Stream, Token
 from tipos import INTEIRO, OPS_ADIT, OPS_MULT, POW, LPAREN, RPAREN, TokenType, UNARIO
 from tipos import NOME, LET, IN, EQUAL, FN, ARROW, COMMA
+from tipos import LETREC, IF, THEN, ELSE, EQEQ, LT
 
 
 @monadic_error
@@ -21,8 +22,22 @@ def parser(tokens: list[Token]) -> Ast | Erro:
 @monadic_error
 def parse_exp(stream: Stream) -> Ast | Erro:
     """exp ::= let NOME = exp in exp
+             | letrec NOME = fn LPAREN [ params ] RPAREN => exp in exp   (v3, §2)
              | fn LPAREN [ params ] RPAREN => exp          (v2, §2)
-             | termo { ( + | - ) termo }"""
+             | if exp then exp else exp                                     (v3, §2)
+             | comp                                                            (v3, §2)
+
+    Estágio superior da pirâmide (EBNF da v3):
+        exp ::= letrec | if | let | fn | comp
+
+    O estágio seguinte é `comp ::= soma [ ( == | < ) soma ]` (v3, §2),
+    cujo corpo aritmético é `soma ::= termo { ( + | - ) termo }`."""
+    if LETREC(stream.peek()):
+        return parse_letrec(stream)
+
+    if IF(stream.peek()):
+        return parse_if(stream)
+
     if LET(stream.peek()):
         return parse_let(stream)
 
@@ -32,6 +47,35 @@ def parse_exp(stream: Stream) -> Ast | Erro:
     if FN(stream.peek()):
         return parse_lambda(stream)
 
+    # Estágio mais próximo da base: comparações (v3) → soma (v3, renomeada
+    # do "termo aditivo" usado na v2) → termo (potência/unário)
+    return parse_comp(stream)
+
+
+@monadic_error
+def parse_comp(stream: Stream) -> Ast | Erro:
+    """comp ::= soma [ ( == | < ) soma ]                (aljabr v3, §2)"""
+    soma = parse_soma(stream)
+    if isinstance(soma, Erro):
+        return soma
+
+    # comp é NÃO-associativo: a segunda soma só é lida se houver operador
+    # == ou < — e o loop não existe, então `1 < 2 < 3` cai no erro de
+    # "tokens depois da expressão" na camada superior.
+    if EQEQ(stream.peek()) or LT(stream.peek()):
+        op = stream.next()
+        soma2 = parse_soma(stream)
+        if isinstance(soma2, Erro):
+            return soma2
+        return [op, soma, soma2]
+
+    return soma
+
+
+@monadic_error
+def parse_soma(stream: Stream) -> Ast | Erro:
+    """soma ::= termo { ( + | - ) termo }            (aljabr v3: renomeação da
+                                                    produção aditiva da v2)"""
     termo = parse_termo(stream)
     while OPS_ADIT(stream.peek()):
         op = stream.next()           # lê o Token do operador
@@ -69,6 +113,77 @@ def parse_let(stream: Stream) -> Ast | Erro:
         return e2
     
     return ["let", var, e1, e2]
+
+
+@monadic_error
+def parse_letrec(stream: Stream) -> Ast | Erro:
+    """letrec ::= letrec NOME = fn LPAREN [ params ] RPAREN => exp in exp
+                 (aljabr v3, §2)
+
+    Nota de implementação: o corpo do `fn` é avaliado com o `parse_exp`
+    normal — logo, dentro dele um `if` ou outro `let` já podem aparecer.
+    """
+    stream.next()  # consome LETREC
+
+    var_tok = NOME(stream.peek())
+    if not var_tok:
+        return Erro("sintaxe: esperava nome após 'letrec'")
+    stream.next()  # consome NOME
+    var = var_tok.lexema
+
+    if not EQUAL(stream.peek()):
+        return Erro("sintaxe: esperava '=' após nome")
+    stream.next()  # consome '='
+
+    if not FN(stream.peek()):
+        # Casos malformados exigidos pela v3: `letrec x = 5 in x` — o `=`
+        # não pode receber literalmente (precisa de um `fn`).
+        return Erro("sintaxe: esperava 'fn' após '=' em 'letrec'")
+    fn_ast = parse_lambda(stream)  # reusa: consome FN ... => corpo
+    if isinstance(fn_ast, Erro):
+        return fn_ast
+
+    if not IN(stream.peek()):
+        return Erro("sintaxe: esperava 'in' após corpo do 'fn'")
+    stream.next()  # consome IN
+
+    body = parse_exp(stream)
+    if isinstance(body, Erro):
+        return body
+
+    return ["letrec", var, fn_ast, body]
+
+
+@monadic_error
+def parse_if(stream: Stream) -> Ast | Erro:
+    """if ::= if exp then exp else exp                  (aljabr v3, §2)
+
+    Ambas as expressões dos ramos são `exp` completas (podem conter `let`,
+    `fn` ou comparações), então reutilizamos os níveis inferiores.
+    """
+    stream.next()  # consome IF
+
+    cond = parse_exp(stream)
+    if isinstance(cond, Erro):
+        return cond
+
+    if not THEN(stream.peek()):
+        return Erro("sintaxe: esperava 'then' após condição de 'if'")
+    stream.next()  # consome THEN
+
+    e1 = parse_exp(stream)
+    if isinstance(e1, Erro):
+        return e1
+
+    if not ELSE(stream.peek()):
+        return Erro("sintaxe: esperava 'else' após expressão do 'then'")
+    stream.next()  # consome ELSE
+
+    e2 = parse_exp(stream)
+    if isinstance(e2, Erro):
+        return e2
+
+    return ["if", cond, e1, e2]
 
 
 @monadic_error

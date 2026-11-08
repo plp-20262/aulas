@@ -14,6 +14,10 @@ OPERACAO = {
     "**": lambda a, b: a ** b,
     "u+": lambda a: a,
     "u-": lambda a: -a,
+    # aljabr v3 (§2): operadores de comparação — mesma família do (Op)
+    # binário: lift f↑ cobre closures (retorna erro) e propagação de erro
+    "==": lambda a, b: int(a == b),
+    "<": lambda a, b: int(a < b),
 }
 
 
@@ -97,6 +101,31 @@ def eval(ast: Ast, env: Environment) -> Val:
             return v1
         new_env = {**env, var: v1}
         return eval(e2, new_env)
+
+    # Regra (LetRec) (v3, §2): ⟨letrec f = fn (p1,...,pn) ⇒ e_f in e2, ρ⟩ ⇓ v2
+    # Com a primeira premissa EM EQUAÇÃO (não passo a passo): ρ1 é o ρ em
+    # que f já aponta para o seu próprio closure — `novo_env[var] = Closure`
+    # registra o vínculo num dicionário que o próprio closure "enxerga".
+    if len(ast) == 4 and ast[0] == "letrec":
+        _, var, fn_ast, body = ast
+        novo_env: Environment = dict(env)
+        novo_env[var] = Closure(tuple(fn_ast[1]), fn_ast[2], novo_env)
+        # a segunda premissa é avaliada no ρ1 recém-construído
+        return eval(body, novo_env)
+
+    # Regra (If) (v3, §2): ⟨if c then e1 else e2, ρ⟩ ⇓ v
+    # (IfVerd)   ⟨c,ρ⟩⇓n, n ∈ ℝ, n ≠ 0  ⇒  ⟨e1,ρ⟩⇓v
+    # (IfFalso)  ⟨c,ρ⟩⇓n, n = 0         ⇒  ⟨e2,ρ⟩⇓v
+    # (IfCond)   ⟨c,ρ⟩⇓clo             ⇒  erro (condição não é valor)
+    if len(ast) == 4 and ast[0] == "if":
+        cond = eval(ast[1], env)
+        if isinstance(cond, Erro):
+            return cond  # propagação monádica (convenção §3)
+        if isinstance(cond, Closure):
+            return Erro("RUNTIME: condição de 'if' é uma função")
+        if cond != 0:  # (IfVerd): n ≠ 0
+            return eval(ast[2], env)
+        return eval(ast[3], env)  # (IfFalso): n = 0
 
     # --- aljabr v2 (§3): regras novas de funções ---
     # Os nós novos têm TAG de string em ast[0] ("fn" e "app"), enquanto os

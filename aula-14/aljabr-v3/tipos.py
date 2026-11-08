@@ -24,6 +24,14 @@ class TokenType(Enum):
     FN = auto()
     ARROW = auto()
     COMMA = auto()
+    # aljabr v3 (§1): quatro novas palavras reservadas (letrec, if, then,
+    # else) e dois novos operadores (==, <)
+    LETREC = auto()
+    IF = auto()
+    THEN = auto()
+    ELSE = auto()
+    EQEQ = auto()
+    LT = auto()
 
 @dataclass(frozen=True)
 class Token:
@@ -72,6 +80,14 @@ EQUAL    = match_type(TokenType.EQUAL)
 FN       = match_type(TokenType.FN)
 ARROW    = match_type(TokenType.ARROW)
 COMMA    = match_type(TokenType.COMMA)
+
+# aljabr v3 (§1): predicados das novas categorias
+LETREC   = match_type(TokenType.LETREC)
+IF        = match_type(TokenType.IF)
+THEN      = match_type(TokenType.THEN)
+ELSE      = match_type(TokenType.ELSE)
+EQEQ      = match_type(TokenType.EQEQ)
+LT        = match_type(TokenType.LT)
 
 # Predicados para grupos de operadores
 OPERADOR = match_type(

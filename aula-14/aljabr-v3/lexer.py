@@ -7,6 +7,11 @@ RESERVADAS = {
     "let": TokenType.LET,
     "in": TokenType.IN,
     "fn": TokenType.FN,
+    # aljabr v3 (§1): quatro novas palavras reservadas
+    "letrec": TokenType.LETREC,
+    "if": TokenType.IF,
+    "then": TokenType.THEN,
+    "else": TokenType.ELSE,
 }
 
 # Mapeamento de regras léxicas (Ordem prioritária)
@@ -33,7 +38,12 @@ TOKEN_SPEC = [
     # regex única casaria `=` e deixaria um `>` órfão como MISMATCH. É a
     # mesma razão pela qual `**` vem antes de `*`.
     ("ARROW",    r"=>"),
+    # aljabr v3 (§1): EQEQ (`==`) antes de EQUAL (`=`) — mesma razão de `**`
+    # antes de `*`; sem isso, `==` casaria `=` e deixaria um `=` órfão
+    ("EQEQ",     r"=="),
     ("EQUAL",    r"="),
+    # aljabr v3 (§1): LT (`<`)
+    ("LT",       r"<"),
     # aljabr v2 (§1): COMMA — separa os itens de params e de args
     ("COMMA",    r","),
     ("INTEIRO",  r"\d+"),
