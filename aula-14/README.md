@@ -330,31 +330,34 @@ pendente dava ambiguidade. Aqui, como `if` é expressão e `else` é obrigatóri
 | 2 | **nova construção** `letrec`, só para lambdas   | ✅ inalterado                         | continua valendo `2`                              | Scheme `letrec`, OCaml `let rec`                                 |
 | 3 | combinador de ponto fixo (Z), sem mudar a linguagem | ✅                                | ✅                                                | correto, mas ilegível; é o lambda cálculo puro                   |
 
-**Decisão-alvo: opção 2**, com `letrec` restrito sintaticamente a lambdas.
+**Decisão adotada: opção 2**, com `letrec` restrito sintaticamente a lambdas.
 
 - Restringir a lambda evita `letrec x = x + 1 in x` (mal definido) sem
   precisar de regra de erro especial.
 - A restrição é **sintática**: o parser rejeita `letrec x = 5 in x`.
-- Limitação assumida (ficar registrada): `letrec` define **uma** função por
-  vez; não há recursão mútua.
+- Limitação assumida: `letrec` define **uma** função por vez; não há recursão
+  mútua.
 
-> **Pergunta (para provocar):** o que deveria valer `let x = 1 in let x = x +
-> 1 in x` se `let` fosse recursivo?
+> **Pergunta:** o que deveria valer `let x = 1 in let x = x + 1 in x` se `let`
+> fosse recursivo?
+> <details>
+> <summary>Clique pra ver a resposta</summary>
 >
-> Resposta: não há resposta boa. O idioma de _re-vincular_ um nome ao próprio
-> valor anterior deixaria de funcionar. Por isso `letrec` é uma construção à
-> parte.
+> <br>Resposta: não há resposta boa. O idioma de _re-vincular_ um nome ao
+> próprio valor anterior deixaria de funcionar. Por isso `letrec` é uma
+> construção à parte.
+> </details>
 
-Real: Python e JavaScript permitem recursão em `def`/`function` porque o corpo
-procura o nome no escopo envolvente **na hora da chamada**; em Java, um lambda
-atribuído a uma variável local não pode se referir à própria variável.
+Na prática: Python e JavaScript permitem recursão em `def`/`function` porque o
+corpo procura o nome no escopo envolvente **na hora da chamada**; em Java, um
+lambda atribuído a uma variável local não pode se referir à própria variável.
 
 ### 4.4 Registro
 
 ```text
-Decisão da turma (A): <condição numérica / booleans nativos>
-Decisão da turma (B): <forma especial `if`>
-Decisão da turma (C): <letrec restrito a lambdas>
+Decisão da turma (A): condição numérica (0 é falso; comparações devolvem 1 ou 0)
+Decisão da turma (B): `if` como forma especial, com `else` obrigatório
+Decisão da turma (C): `letrec`, restrito a lambdas
 Dívidas técnicas: recursão mútua; booleans distintos de números (Unidade 8)
 ```
 
@@ -363,8 +366,8 @@ Dívidas técnicas: recursão mútua; booleans distintos de números (Unidade 8)
 
 ### 5.1 Léxico
 
-Cinco novos lexemas para palavras e dois operadores (as palavras reservadas
-passam a ser sete).
+Quatro novas palavras reservadas e dois novos operadores (as palavras
+reservadas passam a ser sete).
 
 ```text
 LETREC  ::=  letrec           ← NOVO (palavra reservada)
@@ -379,11 +382,14 @@ Palavras reservadas: `let`, `in`, `fn`, `letrec`, `if`, `then`, `else`.
 
 > **Pergunta (ordem das regras, de novo):** quais pares de tokens
 > compartilham prefixo agora? Em que ordem devem ser tentados?
+> <details>
+> <summary>Clique pra ver a resposta</summary>
 >
-> Resposta: `==` e `=>` precisam ser tentados **antes** de `=`. E `letrec`
-> deve ser reconhecido como um lexema completo antes de `let` (ou, melhor: o
-> lexer casa `NOME` e **depois** consulta o mapa de reservadas, de modo que
-> `letrec` nunca vira `let` + `rec`).
+> <br>Resposta: `==` e `=>` precisam ser tentados **antes** de `=`. E
+> `letrec` deve ser reconhecido como um lexema completo antes de `let` (ou,
+> melhor: o lexer casa `NOME` e **depois** consulta o mapa de reservadas, de
+> modo que `letrec` nunca vira `let` + `rec`).
+> </details>
 
 ### 5.2 Sintaxe concreta (EBNF)
 
@@ -462,10 +468,10 @@ LetRec(nome, Lambda(params, corpo_fn), corpo)
 `==` e `<` são operadores binários comuns (`Eq`, `Lt`); a regra (Op) da Aula 12
 apenas passa a admitir `op ∈ {+, -, *, /, **, ==, <}`.
 
-> **Questão de projeto (retomando a da Aula 12 §6.2):** com `If`, `LetRec`,
-> `Let`, `Lambda` e `App` todos com 2 a 4 componentes, listas ficam
-> ambíguas. É um bom momento para migrar a AST para `dataclass`es (que vamos
-> precisar na Unidade 7 de qualquer jeito).
+> **Nota de implementação** (retomando a questão da Aula 12 §6.2): com `If`,
+> `LetRec`, `Let`, `Lambda` e `App`, todos com 2 a 4 componentes, uma AST feita
+> de listas fica ambígua. É um bom momento para migrar a AST para
+> `dataclass`es, que vamos precisar na Unidade 7 de qualquer jeito.
 
 **Domínios semânticos: nenhuma mudança.** $\mathrm{Val} = ℝ ∪ \mathrm{Clo} ∪
 \\{\mathtt{erro}\\}$ (decisão A, opção 2). As comparações são operações
@@ -508,26 +514,26 @@ não-terminação nunca acontecem.
 
 $$
 \frac{
-  \rho' = \rho[f \mapsto \mathsf{clo}((p_1, \ldots, p_n),\ e_f,\ \rho')]
+  \rho_1 = \rho[f \mapsto \mathsf{clo}((p_1, \ldots, p_n),\ e_f,\ \rho_1)]
   \qquad
-  \langle e_2, \rho' \rangle \Downarrow v
+  \langle e_2, \rho_1 \rangle \Downarrow v
 }{
   \langle \texttt{letrec}\ f = \texttt{fn}\ (p_1, \ldots, p_n) \Rightarrow e_f\ \texttt{in}\ e_2,\ \rho \rangle \Downarrow v
 } \quad \text{(LetRec)}
 $$
 
 Leitura: a primeira premissa não é uma avaliação, é uma **equação** que
-descreve $\rho'$. Ele é o ambiente em que $f$ já existe e é o closure de $f$
-cujo ambiente de criação é... o próprio $\rho'$. Logo, quando o corpo de $f$
+descreve $\rho_1$. Ele é o ambiente em que $f$ já existe e é o closure de $f$
+cujo ambiente de criação é... o próprio $\rho_1$. Logo, quando o corpo de $f$
 procura $f$, encontra.
 
 > **Volta da observação da Aula 12 §4.1.** Lá dissemos que closures são
 > construídos "de dentro para fora" e que isso voltaria com a recursão. Aqui
 > o ciclo é **genuíno**: o ambiente contém o closure, que contém o ambiente.
-> (Tecnicamente, $\rho'$ é um ponto fixo; não precisamos desse formalismo.)
+> (Tecnicamente, $\rho_1$ é um ponto fixo; não precisamos desse formalismo.)
 >
 > Nenhuma outra regra muda. Em particular, (App) continua avaliando o corpo
-> em $\rho_0[\ldots]$: é o fato de $\rho_0 = \rho'$ conter $f$ que faz a
+> em $\rho_0[\ldots]$: é o fato de $\rho_0 = \rho_1$ conter $f$ que faz a
 > recursão funcionar.
 
 ### 5.4 Derivação de exemplo
@@ -560,14 +566,14 @@ E o caso-base (o caminho **não** escolhido nunca aparece):
 └─ ⟨5, ∅⟩ ⇓ 5                                                      (Num)
 ```
 
-Contraste com `se(true, 5, 1/0)` (Bloco 3.3): lá, `1/0` é premissa de (App) e
-produz `erro`. Aqui, não é premissa de nada.
+Contraste com `se(true, 1 * a, 1 / a)` (Bloco 3.3): lá, `1 / a` é premissa de
+(App) e produz `erro`. Aqui, o caminho não escolhido não é premissa de nada.
 
 ### 5.5 Mapa para a implementação (tarefa)
 
 | Especificação                              | Implementação                                                                                   |
 |--------------------------------------------|-------------------------------------------------------------------------------------------------|
-| 6 novos lexemas                            | três tokens (`EQEQ`, `LT` e as palavras reservadas); `==` e `=>` antes de `=`                   |
+| 6 novos lexemas                            | seis novos tipos de token (`LETREC`, `IF`, `THEN`, `ELSE`, `EQEQ`, `LT`); `==` e `=>` antes de `=` |
 | `exp` com `if`/`letrec`; `comp`; `soma`    | `parse_exp` decide por `IF`/`LETREC`; novas funções `parse_comp` e `parse_soma`                  |
 | `letrec` só com `fn`                       | após `=`, `expect(FN)`; qualquer outra coisa é erro sintático                                   |
 | (IfVerd), (IfFalso), (IfCond)              | `eval` avalia **só** a condição, e depois **só um** dos caminhos (não reaproveitar o caminho de `Op`) |
@@ -591,260 +597,10 @@ Conjunto de testes:
 | `(fn (x) => x) == 1`                                                                        | `erro`        |
 | `let x = 1 in let x = x + 1 in x`                                                           | `2`           |
 
-Observação para quem tiver curiosidade: a recursão profunda em `aljabr`
-consome pilha de **Python**. Scheme garante chamadas finais sem crescimento de
-pilha; Python não.
-
-
-## Bloco 6: Transparência referencial e linguagem funcional pura (≈ 15 min)
-
-### 6.1 Transparência referencial
-
-Definir no quadro:
-
-> Uma expressão é **referencialmente transparente** quando pode ser
-> **substituída pelo seu valor** em qualquer ponto do programa sem alterar o
-> significado do programa.
-
-Apoiar na álgebra (nome do `aljabr` e matéria do ensino médio): se `x = 2 + 3`,
-então `x * x`, `5 * 5` e `(2 + 3) * (2 + 3)` são intercambiáveis. Em
-`aljabr`:
-
-```text
-let x = 2 + 3 in x * x          # 25
-# ≡ 5 * 5
-# ≡ (2 + 3) * (2 + 3)
-```
-
-E com funções:
-
-```text
-let dobro = fn (x) => 2 * x in
-dobro(21) + dobro(21)           # ≡ 42 + 42 ≡ 2 * dobro(21)
-```
-
-Consequências (listar):
-
-1. avaliar a mesma expressão duas vezes **sempre** dá o mesmo valor;
-2. o valor de uma expressão depende **só** das subexpressões e do ambiente
-   (isso é exatamente o **determinismo** + a **composicionalidade** que
-   registramos nas Aulas 7, 8 e 12);
-3. a ordem de avaliação de subexpressões independentes não altera o valor.
-   (Ressalva fina: erro e não-terminação podem competir; não vamos explorá-la.)
-4. podemos raciocinar **equacionalmente**: substituir iguais por iguais.
-
-> **Efeito colateral:** qualquer coisa observável de uma computação além do
-> valor que ela produz. `aljabr` não tem nenhum: executar um programa só
-> produz o seu valor.
-
-### 6.2 Elo com substituição e ambiente
-
-Na Aula 8, os dois modelos de `let` foram apresentados lado a lado:
-
-- **por substituição:** `let x = 10 in (x - 1) * (x + 1)` vira `(10 - 1) * (10 +
-  1)`;
-- **por ambiente:** mantemos `ρ = {x ↦ 10}` e consultamos quando preciso.
-
-> **Pergunta:** por que dois modelos tão diferentes dão o **mesmo** resultado
-> em `aljabr`?
->
-> Resposta: porque a linguagem é referencialmente transparente. Substituir um
-> nome pelo seu valor é seguro justamente porque o valor nunca "muda por
-> baixo". O modelo de ambiente é só a versão implementável do modelo de
-> substituição (e evita o cuidado extra com captura de variáveis, que o
-> closure resolve de graça).
-
-Ligar com o Bloco 1: no escopo dinâmico, o significado de `f` depende do
-contexto de chamada. Escopo dinâmico **ameaça** a transparência referencial;
-escopo léxico a preserva.
-
-> **Frase para guardar (e retomar na Aula 15):** o modelo de substituição só
-> vale enquanto avaliar uma expressão não deixa efeito. Se algo puder mudar, o
-> "valor de `x`" depende de **quando** perguntamos.
-
-### 6.3 Nomear: linguagem funcional pura
-
-Perguntar: **o que `aljabr` v3 tem? E o que não tem?** Montar a tabela com a
-turma:
-
-| O que **introduzimos**                                  | O que **não** introduzimos                  |
-|---------------------------------------------------------|---------------------------------------------|
-| expressões (tudo produz valor, inclusive `if`)          | atribuição (`x := v`)                       |
-| funções como valores (primeira classe)                  | mutação de qualquer valor                   |
-| closures e escopo léxico                                | sequenciamento de comandos                  |
-| recursão como único mecanismo de repetição              | laços (`while`, `for`)                      |
-| transparência referencial                               | estado que muda ao longo do tempo           |
-|                                                         | efeitos colaterais                          |
-
-Só então nomear:
-
-> `aljabr` é uma linguagem **funcional pura**. "Funcional" porque funções são
-> valores e a computação é aplicação de funções; "pura" porque **não há
-> efeitos**. O nome descreve um **conjunto de escolhas de design** e,
-> principalmente, **o que abrimos mão**: a mutação.
-
-Fechos adicionais:
-
-- (com `letrec`, `if` e aritmética, `aljabr` v3 é **Turing-completa**; e com
-  sintaxe infixa é, na prática, o lambda cálculo.)
-- "Funcional" não é propriedade de uma linguagem específica. Python, Java e
-  JavaScript permitem **programar** em estilo funcional se o programador
-  _escolher não usar_ certas features. Retomaremos isso na síntese
-  (Unidade 9).
-
-
-## Bloco 7: Tabela de síntese (início) (≈ 8 min)
-
-Apresentar o arquivo `tabela-design.md`. Linhas: linguagens-objeto; colunas:
-dimensões de design. Preencher **com os alunos** as linhas até aqui. Marcar
-explicitamente "ainda não temos" nas colunas que não existem.
-
-| Linguagem   | Avaliação                  | Vinculação        | Escopo                     | Abstração           | Estado | Dados                          | Controle                      | Tipos   |
-|-------------|----------------------------|-------------------|----------------------------|---------------------|--------|--------------------------------|-------------------------------|---------|
-| `rpn`       | pilha, estrita             | —                 | —                          | —                   | —      | números                        | sequência de tokens           | dinâmicos |
-| `mlisp`     | recursiva sobre a AST      | —                 | —                          | —                   | —      | números                        | composição de expressões      | dinâmicos |
-| `calc`      | recursiva sobre a AST      | —                 | —                          | —                   | —      | números                        | composição de expressões      | dinâmicos |
-| `aljabr` v1 | por ambiente, estrita      | `let` (não rec.)  | léxico                     | valores nomeados    | —      | números                        | —                             | dinâmicos |
-| `aljabr` v2 | por ambiente, estrita      | `let` (não rec.)  | léxico (closure)           | **computações**     | —      | números + closures             | —                             | dinâmicos |
-| `aljabr` v3 | estrita, **exceto `if`**   | `let`, `letrec`   | léxico                     | funções recursivas  | —      | números + closures             | `if` (expressão), recursão    | dinâmicos (`2 + (1<2)` vale `3`) |
-
-Colunas em que a turma deve dizer, em voz alta, **"ainda não temos"**: estado,
-dados compostos (só números e closures) e tipos estáticos.
-
-Células que merecem uma frase de discussão:
-
-- **avaliação de v3:** estrita _exceto_ `if`: forma especial;
-- **dados:** closures são dados (os booleans da biblioteca são dados
-  codificados como funções);
-- **tipos:** a nota sobre números e "booleans" é a semente da Unidade 8.
-
-Tarefa opcional no Classroom: cada estudante justifica **uma célula**.
-
-
-## Bloco 8: O que ainda não conseguimos escrever (≈ 12 min)
-
-> Esta é a ponte para a Unidade 5. Evitar dizer "estado" antes de a turma
-> chegar lá.
-
-Com `letrec` e `if` temos repetição. Mas ela é de um tipo especial: cada
-repetição é uma **nova chamada** com **novos valores**. Nunca a _mesma_
-variável com valor diferente. Três desafios:
-
-### 8.1 Um contador
-
-Escrever `contador` tal que chamadas sucessivas devolvam `1`, `2`, `3`:
-
-```text
-contador()      # 1
-contador()      # 2
-contador()      # 3
-```
-
-Deixar tentar com closure. Eles descobrem que o ambiente capturado é imutável.
-Pior: em `aljabr`, uma função com os mesmos argumentos **sempre** devolve o
-mesmo valor. `contador()` não pode existir.
-
-### 8.2 Um `enquanto`
-
-```text
-enquanto (i < 10) corpo
-```
-
-Se nada muda, `i < 10` vale sempre o mesmo: ou o laço não executa nenhuma vez,
-ou executa para sempre. Em `aljabr`, repetição **só** existe como recursão.
-
-### 8.3 Reavaliar uma expressão
-
-Por que alguém avaliaria `e` duas vezes? Pela transparência referencial, o
-valor é sempre o mesmo: seria desperdício (poderíamos até guardar e reaproveitar
-o resultado).
-
-> **Pergunta final:** em que condições faria sentido avaliar a mesma expressão
-> duas vezes?
->
-> Resposta que queremos: quando o valor pode depender de **quando** a
-> avaliação acontece.
-
-### 8.4 Frase de transição
-
-> "Todo o curso até aqui foi sobre uma linguagem em que **quando** não
-> importa. Na quarta, vamos perder essa propriedade de propósito, e ver o que
-> se ganha e o que se paga."
-
-
-## Bloco 9: Fechamento e tarefa (≈ 5 min)
-
-### 9.1 Resumo
-
-1. Mostramos o limite de v2 em três paredes (nome, estrita, sem teste) e
-   decidimos **como** removê-las em v3: `letrec`, `if` como forma especial e
-   comparações.
-2. Especificamos v3 nos três níveis; a implementação é a tarefa.
-3. Nomeamos o que construímos: funções de primeira classe e **linguagem
-   funcional pura**, caracterizada pelo que introduzimos e, principalmente,
-   pelo que não introduzimos.
-
-### 9.2 Exercícios de fixação (para a Aula 15)
-
-1. **Implementar `aljabr` v3** a partir das especificações (léxico, EBNF e
-   regras), usando a tabela de testes do Bloco 5.5. Ao implementar o `letrec`,
-   **anote** qualquer dificuldade que tiver para criar um closure cujo ambiente
-   contém o próprio closure e **como** você resolveu isso em Python.
-2. Derivar, com as regras, o valor de `if 0 then 1/0 else 7` e explicar por que
-   `se(true, 1, 1/0)` dá `erro` mas `if 1 then 1 else 1/0` dá `1`.
-3. Escrever, em Python, `soma(n)` (soma de `1` a `n`) usando **apenas funções,
-   chamadas e `if`/`else`**: sem atribuição (nem `+=`, nem `:=`), sem
-   `nonlocal`/`global` e sem laços.
-4. **(Desafio)** Tentar escrever em Python, nas mesmas restrições do item 3,
-   uma função `contador` que devolva `1`, `2`, `3` em chamadas sucessivas.
-   Anotar **exatamente** onde trava.
-5. **(Desafio de design)** Suponha que `aljabr` precisasse aceitar `x := valor`.
-   O que teria de mudar na assinatura de `eval(expr, env)`? **Onde** o novo
-   valor ficaria guardado? Escrever em poucas linhas; o que acontece se dois
-   closures compartilham `x`?
-6. **(Opcional)** Derivar `<=`, `>`, `>=` e `!=` em `aljabr` v3 usando `if`.
-
-
-## Pontos de checagem de entendimento
-
-- **Após o Bloco 2:** a turma consegue listar as quatro propriedades de
-  primeira classe usando exemplos dos próprios programas?
-- **Após o Bloco 3:** a turma explica, sem ajuda, por que `se(true, 1, 1/0)`
-  vale `erro`? E por que `let f = fn (n) => f(n) in f(1)` também?
-- **Após o Bloco 4:** a turma articula por que `letrec` é preferível a mudar o
-  `let` (o exemplo `let x = x + 1`)?
-- **Após o Bloco 5:** a turma enxerga, na **forma** das regras `(If…)`, que só
-  um caminho é avaliado? E consegue dizer o que há de circular em `(LetRec)`?
-- **Após o Bloco 6:** a turma define transparência referencial com suas
-  palavras e explica por que substituição e ambiente coincidem em `aljabr`?
-- **Após o Bloco 8:** a turma percebe que o contador **não pode** existir em
-  `aljabr`, e não apenas que "é difícil"?
-
-
-## Ponte para a Aula 15 e ajustes sugeridos ao plano
-
-### Como abrir a Aula 15
-
-- Abrir com os três fracassos do Bloco 8 (2 min) e ir direto às propostas dos
-  alunos para o exercício 5.
-- A proposta mais provável é **"mutar o dicionário do ambiente"**. Tratar como
-  alternativa legítima de design, não como erro. Depois mostrar o que ela não
-  resolve bem (aliasing explícito, formalização) e só então apresentar o
-  **store** (`ρ: nome → localização`, `σ: localização → valor`) como decisão
-  justificada, e não como notação imposta.
-- Retomar o `letrec` implementado: quem usou uma atribuição (ou `dict`
-  atualizado depois da criação do closure) já usou **estado** na metalinguagem,
-  escondido da linguagem-objeto. É o primeiro exemplo de estado do curso.
-
-### Duas observações sobre o plano de aulas
-
-- **Comandos na Aula 15.** O plano atual deixa a discussão _expressão ×
-  comando_ para a Aula 16. Como `x := valor` obriga a pergunta "que valor essa
-  construção produz?", sugiro plantá-la já na Aula 15 e desenvolvê-la na Aula
-  16 com `if` e `enquanto`. Nota: o `if` de v3 é uma **expressão**; na Unidade 6
-  teremos o `if` como _comando_. A comparação entre os dois é o melhor
-  material para essa discussão.
-- **Reavaliação na Aula 16.** O argumento do Bloco 8.3 (só com estado faz
-  sentido reavaliar uma expressão) é a justificativa natural para o `enquanto`.
-  Vale incluí-lo na motivação da Aula 16: lá ele deixa de ser pergunta e vira
-  conclusão.
+> Para quem tiver curiosidade: a recursão profunda em aljabr consome a pilha de
+> Python, e `fat(5000)` pode levantar `RecursionError`. Mas veja que isso é uma limitação do
+> interpretador, não da linguagem objeto: as regras de avaliação não dizem nada sobre pilha.
+> Scheme e outras LPs funcionais vão além e exigem que chamadas em posição final não consumam
+> pilha; o GHC aloca a pilha no heap, e por isso recursões fundas costumam funcionar em
+> Haskell. Em Python, dá para obter algo parecido reescrevendo o eval com um trampolim
+> ou uma pilha explícita, mas isso muda o interpretador, não a linguagem.
