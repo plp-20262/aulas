@@ -6,7 +6,7 @@ def test_eval_var_declaracao():
     var y := 20;
     x + y
     """
-    assert executar_programa(prog) == 30
+    assert executar_programa(prog, {}, {}) == 30
 
 def test_eval_atribuicao_mutavel():
     prog = """
@@ -15,7 +15,7 @@ def test_eval_atribuicao_mutavel():
     contador := contador + 5;
     contador
     """
-    assert executar_programa(prog) == 6
+    assert executar_programa(prog, {}, {}) == 6
 
 def test_eval_escopo_de_bloco_var():
     prog = """
@@ -26,4 +26,4 @@ def test_eval_escopo_de_bloco_var():
     };
     x
     """
-    assert executar_programa(prog) == 100
+    assert executar_programa(prog, {}, {}) == 100

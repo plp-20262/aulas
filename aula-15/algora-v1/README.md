@@ -29,21 +29,24 @@ pura) reside nos seguintes aspectos:
 
 Algora, contudo, também suporta construções imperativas, mais especificamente:
 
-1. variáveis mutáveis (estado);
-2. comandos de declaração e atribuição.
-3. programas como sequenciamento de comandos.
+1. variáveis com estado (mutáveis);
+2. comando de atribuição de variáveis;
+3. comandos de declaração (de variáveis e de funções);
+3. programas como sequências de comandos.
 
 ### Sintaxe própria, diferente de Aljabr e Algol
 
 As similaridades mencionadas acima são de naturez semântica, não sintática e
-léxica. Nesse sentido, Aljabr usa um mix de elementos de diferentes linguagens.
-Para a atribuição, contudo, usarei o clássico símbolo `:=` introduzido por
-Algol. 
+léxica. Nesse sentido, Aljabr usa um mix de elementos de diferentes linguagens
+modernas. Para a atribuição, contudo, usarei o clássico símbolo `:=`
+introduzido por Algol. Abaixo, seguem as especificações formais da linguagem.
 
 
 ## 1. Léxico
 
-A linguagem **Algora** introduz novos delimitadores de bloco (`{`, `}`), terminação de instrução (`;`), atribuição mutável (`:=`) e declaração de função (`def`).
+A linguagem **Algora** introduz novos delimitadores de bloco (`{`, `}`),
+terminação de instrução (`;`), atribuição mutável (`:=`) e declaração de função
+(`def`).
 
 ```text
 ASSIGN    ::=  :=              ← NOVO
@@ -72,12 +75,19 @@ NOME      ::=  [a-zA-Z_][a-zA-Z0-9_]*  (exceto palavras reservadas)
 
 **Palavras reservadas:** `var`, `def`, `fn`, `if`, `else`.
 
-> **Nota de Lexer:** `:=` (`ASSIGN`) deve vir antes de `=` (`EQUAL`), assim como `**` vem antes de `*` e `==` vem antes de `=`. Identificadores da categoria `NOME` aceitam letras maiúsculas e minúsculas.
+> **Nota para o Lexer:** `:=` (`ASSIGN`) deve vir antes de `=` (`EQUAL`), assim
+> como `**` vem antes de `*` e `==` vem antes de `=`. Identificadores da
+> categoria `NOME` aceitam letras maiúsculas e minúsculas.
 
 
 ## 2. Sintaxe (EBNF)
 
-Um programa em **Algora** é estruturado como um **bloco**: uma sequência de zero ou mais comandos (*statements*) encerrados por ponto e vírgula, finalizada por uma expressão cujo valor representa o resultado da avaliação do programa.
+Um programa em **Algora** é estruturado como um **bloco**: uma sequência de
+zero ou mais comandos (*statements*) seguidos de um `;` (ponto e vírgula),
+finalizada por uma expressão cujo valor será tomado como o resultado da
+avaliação do programa. Esta decisão vincula a linguagem à semântica de Aljabr,
+porque faz todo programa e todo corpo de bloco (veja abaixo) ter um valor
+associado (o da última expressão que o forma).
 
 ```text
 programa    ::= bloco_corpo
@@ -123,19 +133,17 @@ args        ::= exp { , exp }
 | Ambientes | $\mathrm{Env} = \mathrm{Var} \rightharpoonup \mathrm{Loc}$ | Mapeamento de nomes de variáveis para endereços de memória. |
 | Memória (*Store*) | $\mathrm{Store} = \mathrm{Loc} \rightharpoonup \mathrm{Val}$ | Mapeamento parcial de endereços de memória para valores. |
 
----
 
 ### 3.2 Relações de Transição
 
 A semântica opera sob um modelo de memória de dois níveis ($\rho, \sigma$):
 
-1. **Avaliação de Comandos:** $\langle c, \rho, \sigma \rangle \rightarrow \langle \rho_1, \sigma' \rangle$  
-   *(Um comando $c$ executado no ambiente $\rho$ e memória $\sigma$ produz um novo ambiente $\rho_1$ e uma nova memória $\sigma'$)*
+1. **Avaliação de Comandos:** $\langle c, \rho, \sigma \rangle \Downarrow \langle \rho_1, \sigma_1 \rangle$  
+   (Um comando $c$ executado no ambiente $\rho$ e memória $\sigma$ produz um novo ambiente $\rho_1$ e uma nova memória $\sigma_1$)
 
-2. **Avaliação de Expressões e Blocos:** $\langle e, \rho, \sigma \rangle \Downarrow \langle v, \sigma' \rangle$  
-   *(Uma expressão ou bloco $e$ avaliado no ambiente $\rho$ e memória $\sigma$ produz um valor $v \in \mathrm{Val}$ e atualiza a memória para $\sigma'$)*
+2. **Avaliação de Expressões e Blocos:** $\langle e, \rho, \sigma \rangle \Downarrow \langle v, \sigma_1 \rangle$  
+   (Uma expressão ou bloco $e$ avaliado no ambiente $\rho$ e memória $\sigma$ produz um valor $v \in \mathrm{Val}$ e atualiza a memória para $\sigma_1$)
 
----
 
 ### 3.3 Regras de Avaliação de Comandos (*Statements*)
 
@@ -146,18 +154,19 @@ $$
 \frac{
   \langle e, \rho, \sigma \rangle \Downarrow \langle v, \sigma_1 \rangle \qquad \ell \notin \mathrm{dom}(\sigma_1)
 }{
-  \langle \mathtt{var}\ x\\, \mathtt{:=} e; \, \rho, \sigma \rangle \rightarrow \langle \rho[x \mapsto \ell],\, \sigma_1[\ell \mapsto v] \rangle
+  \langle \mathtt{var}\ x\\, \mathtt{:=} e; \, \rho, \sigma \rangle \Downarrow \langle \rho[x \mapsto \ell],\\, \sigma_1[\ell \mapsto v] \rangle
 } \quad \text{(VarDecl)}
 $$
 
 #### Atribuição Mutável (`:=`)
+
 Busca o endereço $\ell = \rho(x)$ já existente e substitui o valor contido nesse endereço na memória. O ambiente $\rho$ permanece inalterado:
 
 $$
 \frac{
   \rho(x) = \ell \qquad \langle e, \rho, \sigma \rangle \Downarrow \langle v, \sigma_1 \rangle
 }{
-  \langle x\\, \mathtt{:=} e; \, \rho, \sigma \rangle \rightarrow \langle \rho,\\, \sigma_1[\ell \mapsto v] \rangle
+  \langle x\\, \mathtt{:=} e; \, \rho, \sigma \rangle \Downarrow \langle \rho,\\, \sigma_1[\ell \mapsto v] \rangle
 } \quad \text{(Assign)}
 $$
 
@@ -165,49 +174,57 @@ $$
 \frac{
   x \notin \mathrm{dom}(\rho)
 }{
-  \langle x\\, \mathtt{:=} e; \, \rho, \sigma \rangle \rightarrow \mathbf{erro}
+  \langle x\\, \mathtt{:=} e; \, \rho, \sigma \rangle \Downarrow \mathbf{erro}
 } \quad \text{(AssignNaoDeclarada)}
 $$
 
 #### Declaração de Função Nomeada (`def`)
-Aloca um endereço de memória $\ell_f$ para armazenar a closure da função. A closure captura o ambiente $\rho_1$ que inclui a própria função $f$, viabilizando **recursão nativa**:
+
+Aloca um endereço de memória $\ell_f$ para armazenar a closure da função. A
+closure captura o ambiente $\rho_1$ que inclui a própria função $f$,
+viabilizando **recursão nativa**:
 
 $$
 \frac{
-  \ell_f \notin \mathrm{dom}(\sigma) \qquad \rho_1 = \rho[f \mapsto \ell_f] \qquad v_f = \mathsf{clo}((p_1, \ldots, p_n),\\, e_{\text{corpo}},\, \rho_1)
+  \ell_f \notin \mathrm{dom}(\sigma) \qquad \rho_1 = \rho[f \mapsto \ell_f] \qquad v_f = \mathsf{clo}((p_1, \ldots, p_n),\\, e_{\text{corpo}},\\, \rho_1)
 }{
-  \langle \mathtt{def}\ f(p_1, \ldots, p_n)\ e_{\text{corpo}}, \rho, \sigma \rangle \rightarrow \langle \rho_1,\, \sigma[\ell_f \mapsto v_f] \rangle
+  \langle \mathtt{def}\ f(p_1, \ldots, p_n)\ e_{\text{corpo}}, \rho, \sigma \rangle \Downarrow \langle \rho_1,\\, \sigma[\ell_f \mapsto v_f] \rangle
 } \quad \text{(FunDecl)}
 $$
 
 #### Expressão como Comando (`exp ;`)
-Avalia a expressão por seus efeitos colaterais na memória e descarta o valor resultante $v$:
+
+Avalia a expressão por seus efeitos colaterais na memória e descarta o valor
+resultante $v$:
 
 $$
 \frac{
   \langle e, \rho, \sigma \rangle \Downarrow \langle v, \sigma_1 \rangle \qquad v \neq \mathbf{erro}
 }{
-  \langle e;, \rho, \sigma \rangle \rightarrow \langle \rho, \sigma_1 \rangle
+  \langle e;, \rho, \sigma \rangle \Downarrow \langle \rho, \sigma_1 \rangle
 } \quad \text{(ExprStmt)}
 $$
 
----
 
 ### 3.4 Regras de Avaliação de Expressões e Blocos
 
 #### Blocos e Retorno Implícito (`Block`)
-Executa sequencialmente uma cadeia de comandos alterando a memória $\sigma_0 \to \sigma_1 \dots \to \sigma_n$ em um subescopo local. O resultado do bloco é o valor da expressão final $e_{\text{final}}$:
+
+Executa sequencialmente uma cadeia de comandos alterando a memória $\sigma_0
+\to \sigma_1 \dots \to \sigma_n$ em um subescopo local. O resultado do bloco é
+o valor da expressão final $e_{\text{final}}$:
 
 $$
 \frac{
   \begin{matrix}
-  \langle c_1, \rho, \sigma_0 \rangle \rightarrow \langle \rho_1, \sigma_1 \rangle \quad \dots \quad \langle c_n, \rho_{n-1}, \sigma_{n-1} \rangle \rightarrow \langle \rho_n, \sigma_n \rangle \\
+  \langle c_1, \rho, \sigma_0 \rangle \Downarrow \langle \rho_1, \sigma_1 \rangle \quad \dots \quad \langle c_n, \rho_{n-1}, \sigma_{n-1} \rangle \Downarrow \langle \rho_n, \sigma_n \rangle \qquad
   \langle e_{\text{final}}, \rho_n, \sigma_n \rangle \Downarrow \langle v, \sigma_{n+1} \rangle
   \end{matrix}
 }{
   \langle \{ c_1 \dots c_n\ e_{\text{final}} \}, \rho, \sigma_0 \rangle \Downarrow \langle v, \sigma_{n+1} \rangle
 } \quad \text{(Block)}
 $$
+
 
 #### Números e Variáveis
 
@@ -239,7 +256,7 @@ $$
 $$
 \frac{
 }{
-  \langle \mathtt{fn}\ (p_1, \ldots, p_n)\ e_{\text{bloco}},\, \rho, \sigma \rangle \Downarrow \langle \mathsf{clo}((p_1, \ldots, p_n),\, e_{\text{bloco}},\, \rho),\, \sigma \rangle
+  \langle \mathtt{fn}\ (p_1, \ldots, p_n)\ e_{\text{bloco}},\\, \rho, \sigma \rangle \Downarrow \langle \mathsf{clo}((p_1, \ldots, p_n),\\, e_{\text{bloco}},\\, \rho),\\, \sigma \rangle
 } \quad \text{(Lam)}
 $$
 
@@ -249,14 +266,14 @@ Avalia a função e os argumentos, aloca endereços de memória distintos $\ell_
 $$
 \frac{
   \begin{matrix}
-  \langle e_f, \rho, \sigma_0 \rangle \Downarrow \langle \mathsf{clo}((p_1, \ldots, p_n), e_{\text{corpo}}, \rho_0),\, \sigma_1 \rangle \\
+  \langle e_f, \rho, \sigma_0 \rangle \Downarrow \langle \mathsf{clo}((p_1, \ldots, p_n), e_{\text{corpo}}, \rho_0),\\, \sigma_1 \rangle \\
   \langle a_1, \rho, \sigma_1 \rangle \Downarrow \langle v_1, \sigma_2 \rangle \quad \dots \quad \langle a_n, \rho, \sigma_n \rangle \Downarrow \langle v_n, \sigma_{n+1} \rangle \\
   \ell_1, \ldots, \ell_n \notin \mathrm{dom}(\sigma_{n+1}) \quad \text{distintos} \\
-  \rho_1 = \rho_0[p_1 \mapsto \ell_1, \dots, p_n \mapsto \ell_n] \qquad \sigma' = \sigma_{n+1}[\ell_1 \mapsto v_1, \dots, \ell_n \mapsto v_n] \\
-  \langle e_{\text{corpo}}, \rho_1, \sigma' \rangle \Downarrow \langle v, \sigma'' \rangle
+  \rho_1 = \rho_0[p_1 \mapsto \ell_1, \dots, p_n \mapsto \ell_n] \qquad \sigma_1 = \sigma_{n+1}[\ell_1 \mapsto v_1, \dots, \ell_n \mapsto v_n] \\
+  \langle e_{\text{corpo}}, \rho_1, \sigma_1 \rangle \Downarrow \langle v, \sigma_2 \rangle
   \end{matrix}
 }{
-  \langle e_f(a_1, \ldots, a_n), \rho, \sigma_0 \rangle \Downarrow \langle v, \sigma'' \rangle
+  \langle e_f(a_1, \ldots, a_n), \rho, \sigma_0 \rangle \Downarrow \langle v, \sigma_2 \rangle
 } \quad \text{(App)}
 $$
 
@@ -317,9 +334,8 @@ $$
 } \quad \text{(OpBinario)}
 $$
 
----
 
 ### 3.5 Convenção Monádica de Propagação de Erros
 
-> Se qualquer premissa da forma $\langle e, \rho, \sigma \rangle \Downarrow \mathbf{erro}$ ou $\langle c, \rho, \sigma \rangle \rightarrow \mathbf{erro}$ produzir $\mathbf{erro}$, a avaliação da regra é interrompida imediatamente e a conclusão de toda a derivação é $\mathbf{erro}$.
+> Se qualquer premissa da forma $\langle e, \rho, \sigma \rangle \Downarrow \mathbf{erro}$ ou $\langle c, \rho, \sigma \rangle \Downarrow \mathbf{erro}$ produzir $\mathbf{erro}$, a avaliação da regra é interrompida imediatamente e a conclusão de toda a derivação é $\mathbf{erro}$.
 

@@ -170,11 +170,11 @@ def executar_programa(programa: str, env: dict[str, int], store: dict[int, Val])
 
 def main():
     if len(sys.argv) > 1:
-        programa = open(sys.argv[1]).read()
+        programa = open(sys.argv[1]).read().strip()
     else:
         programa = sys.stdin.read()
     resultado = executar_programa(programa, {}, {})
-    print(f"Programa:\n{programa}\n")
+    print(f"{programa}\n")
     print(f"--> {resultado}")
 
 if __name__ == "__main__":

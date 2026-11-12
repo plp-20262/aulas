@@ -23,50 +23,36 @@ def parser(tokens: list[Token]) -> Block | Erro:
 @monadic_error
 def parse_bloco_corpo(stream: Stream) -> Block | Erro:
     stmts: list[Stmt] = []
-    
+
     while True:
         tok = stream.peek()
-        if tok is None:
-            break
-            
+
         if VAR(tok) or FUNCTION(tok):
             stmt = parse_comando(stream)
             if isinstance(stmt, Erro): return stmt
             stmts.append(stmt)
-        elif NOME(tok):
+            continue
+
+        if NOME(tok):
             tok_nome = stream.next()
-            if ASSIGN(stream.peek()):
-                stream.it = iter([tok_nome] + list(stream.it))
+            eh_atribuicao = bool(ASSIGN(stream.peek()))
+            stream.it = iter([tok_nome] + list(stream.it))   # devolve o token
+            if eh_atribuicao:
                 stmt = parse_comando(stream)
                 if isinstance(stmt, Erro): return stmt
                 stmts.append(stmt)
-            else:
-                stream.it = iter([tok_nome] + list(stream.it))
-                exp_cand = parse_exp(stream)
-                if isinstance(exp_cand, Erro): return exp_cand
-                
-                if SEMICOLON(stream.peek()):
-                    stream.next()
-                    stmts.append(ExprStmt(exp_cand))
-                else:
-                    return Block(stmts, exp_cand)
-        elif LBRACE(tok) or LPAREN(tok) or INTEIRO(tok) or IF(tok) or FN(tok):
-            exp_cand = parse_exp(stream)
-            if isinstance(exp_cand, Erro): return exp_cand
-            
-            if SEMICOLON(stream.peek()):
-                stream.next()
-                stmts.append(ExprStmt(exp_cand))
-            else:
-                return Block(stmts, exp_cand)
+                continue
+
+        # qualquer outra coisa deve ser uma expressão (inclui +/-, e erros)
+        exp = parse_exp(stream)
+        if isinstance(exp, Erro): return exp
+
+        if SEMICOLON(stream.peek()):
+            stream.next()
+            stmts.append(ExprStmt(exp))
         else:
-            break
+            return Block(stmts, exp)
 
-    exp = parse_exp(stream)
-    if isinstance(exp, Erro):
-        return exp
-
-    return Block(stmts, exp)
 
 @monadic_error
 def parse_comando(stream: Stream) -> Stmt | Erro:

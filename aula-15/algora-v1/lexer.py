@@ -25,7 +25,7 @@ TOKEN_SPEC = [
     ("SEMICOLON", r";"),
     ("COMMA",     r","),
     ("LT",        r"<"),
-    ("INTEIRO",   r"\d+"),
+    ("INTEIRO",   r"[0-9]+"),
     ("NOME",      r"[a-zA-Z_][a-zA-Z0-9_]*"), # Suporte a letras maiúsculas e minúsculas!
     ("SPACE",     r"[ \t\n\r]+"),
     ("MISMATCH",  r"."),

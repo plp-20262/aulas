@@ -11,7 +11,7 @@ def test_eval_funcao_recursiva_fatorial():
     }
     fat(5)
     """
-    assert executar_programa(prog) == 120
+    assert executar_programa(prog, {}, {}) == 120
 
 def test_eval_funcao_recursiva_fibonacci():
     prog = """
@@ -24,4 +24,4 @@ def test_eval_funcao_recursiva_fibonacci():
     }
     fib(6)
     """
-    assert executar_programa(prog) == 8
+    assert executar_programa(prog, {}, {}) == 8
