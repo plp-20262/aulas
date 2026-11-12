@@ -11,3 +11,7 @@ Objetivo: evoluir no projeto de Algora (spec + implementação)
    - comandos alteram a memória: $\langle d, \rho, \sigma \rangle \Downarrow \langle \rho_1, \sigma_1 \rangle$ 
 
 3. apresentação da implementação e exemplos
+
+- [Implementação de Algora](algora-v1)
+- [Manual da Linguagem](algora-v1/MANUAL.md)
+- [Especificação da Linguagem](algora-v1/README.md)
