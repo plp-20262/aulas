@@ -13,6 +13,12 @@ adiciona suporte a _estado_ e _mutação_. O nome é proposto como uma fusão de
 Aljabr e Algol, uma das representantes de maior relevância histórica dentre as
 linguagens imperativas e de programação estruturada.
 
+> Este documento é a especificação formal da linguagem, para fins de referência
+> para a implementação de tradutores (sejam interpretadores e/ou compiladores).
+> Você também pode ler o [Manual de Algora](MANUAL.md), para ver como as
+> _features_ da linguagem podem ser usadas. Por fim, você também pode ver
+> exemplos de pequenos programas no diretório [exemplos](exemplos).
+
 ## Características Aljabr
 
 ### Similaridade com Aljabr
