@@ -7,6 +7,7 @@ RESERVADAS = {
     "fn": TokenType.FN,
     "if": TokenType.IF,
     "else": TokenType.ELSE,
+    "while": TokenType.WHILE,
 }
 
 TOKEN_SPEC = [

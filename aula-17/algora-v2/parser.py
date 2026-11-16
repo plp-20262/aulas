@@ -1,8 +1,8 @@
 from tipos import (
     Ast, Erro, monadic_error, Stream, Token, TokenType,
-    Stmt, Expr, VarDecl, Assign, FunDecl, ExprStmt, Num, Var,
+    Stmt, Expr, VarDecl, Assign, FunDecl, ExprStmt, While, Num, Var,
     AnonFun, Call, BinaryOp, UnaryOp, IfExpr, Block,
-    INTEIRO, NOME, VAR, FUNCTION, FN, IF, ELSE,
+    INTEIRO, NOME, VAR, FUNCTION, FN, IF, ELSE, WHILE,
     ASSIGN, EQUAL, EQEQ, LT, OPS_ADIT, OPS_MULT, POW,
     UNARIO, LPAREN, RPAREN, LBRACE, RBRACE, SEMICOLON, COMMA
 )
@@ -27,7 +27,7 @@ def parse_bloco_corpo(stream: Stream) -> Block | Erro:
     while True:
         tok = stream.peek()
 
-        if VAR(tok) or FUNCTION(tok):
+        if VAR(tok) or FUNCTION(tok) or WHILE(tok):
             stmt = parse_comando(stream)
             if isinstance(stmt, Erro): return stmt
             stmts.append(stmt)
@@ -107,6 +107,17 @@ def parse_comando(stream: Stream) -> Stmt | Erro:
         
         return FunDecl(var_tok.lexema, params, body)
 
+    if WHILE(tok):
+        stream.next()
+        cond = parse_exp(stream)
+        if isinstance(cond, Erro): return cond
+
+        body = parse_bloco_cmd(stream)
+        if isinstance(body, Erro): return body
+
+        # while_cmd não é seguido de ';' (como func_decl)
+        return While(cond, body)
+
     return Erro(f"sintaxe: comando inválido '{tok.lexema if tok else 'EOF'}'")
 
 @monadic_error
@@ -120,6 +131,45 @@ def parse_bloco_delimitado(stream: Stream) -> Block | Erro:
     if not RBRACE(stream.peek()): return Erro("sintaxe: esperava '}' no fim do bloco")
     stream.next()
     return body
+
+@monadic_error
+def parse_bloco_cmd(stream: Stream) -> list[Stmt] | Erro:
+    """bloco_cmd ::= LBRACE { comando } RBRACE   (corpo do while: sem expressão final)"""
+    if not LBRACE(stream.peek()): return Erro("sintaxe: esperava '{' no corpo do 'while'")
+    stream.next()
+
+    stmts: list[Stmt] = []
+    while not RBRACE(stream.peek()):
+        if stream.peek() is None: return Erro("sintaxe: esperava '}' no fim do bloco")
+        stmt = parse_item_cmd(stream)
+        if isinstance(stmt, Erro): return stmt
+        stmts.append(stmt)
+
+    stream.next()   # consome '}'
+    return stmts
+
+@monadic_error
+def parse_item_cmd(stream: Stream) -> Stmt | Erro:
+    """comando ::= func_decl | var_decl ; | atribuicao ; | while_cmd | exp ;"""
+    tok = stream.peek()
+
+    if VAR(tok) or FUNCTION(tok) or WHILE(tok):
+        return parse_comando(stream)
+
+    if NOME(tok):
+        tok_nome = stream.next()
+        eh_atribuicao = bool(ASSIGN(stream.peek()))
+        stream.it = iter([tok_nome] + list(stream.it))   # devolve o token
+        if eh_atribuicao:
+            return parse_comando(stream)
+
+    # qualquer outra coisa deve ser uma expressão seguida de ';'
+    exp = parse_exp(stream)
+    if isinstance(exp, Erro): return exp
+    if not SEMICOLON(stream.peek()):
+        return Erro("sintaxe: esperava ';' após expressão (o corpo do 'while' não tem expressão final)")
+    stream.next()
+    return ExprStmt(exp)
 
 @monadic_error
 def parse_exp(stream: Stream) -> Expr | Erro:

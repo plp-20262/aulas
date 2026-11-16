@@ -4,7 +4,7 @@ from lexer import tokenizador
 from parser import parser
 from tipos import (
     Ast, Erro, monadic_error, Token, TokenType,
-    Stmt, Expr, VarDecl, Assign, FunDecl, ExprStmt, Num, Var,
+    Stmt, Expr, VarDecl, Assign, FunDecl, ExprStmt, While, Num, Var,
     AnonFun, Call, BinaryOp, UnaryOp, IfExpr, Block
 )
 
@@ -66,6 +66,26 @@ def eval_stmt(stmt: Stmt, env: dict[str, int], store: dict[int, Val]) -> Erro | 
             if isinstance(v, Erro):
                 return v
             return None
+
+        case While(cond, body):
+            # As regras (WhileFalso)/(WhileVerd) são recursivas, mas aqui o laço é
+            # iterativo: não consome a pilha de Python.
+            # O `env` do comando NÃO muda: cada iteração executa o corpo numa CÓPIA
+            # de `env` (o escopo do corpo, descartado ao fim da iteração). O store é
+            # compartilhado, e é ele que carrega o "progresso" do laço.
+            while True:
+                v_c = eval_expr(cond, env, store)
+                if isinstance(v_c, Erro):
+                    return v_c
+                if isinstance(v_c, Closure):
+                    return Erro("RUNTIME: condição do 'while' é uma função")
+                if v_c == 0:                        # (WhileFalso)
+                    return None
+                body_env = dict(env)                # (WhileVerd) + (BlocoCmd)
+                for s in body:
+                    err = eval_stmt(s, body_env, store)
+                    if isinstance(err, Erro):
+                        return err
 
 def eval_pow(v1: int | float, v2: int | float) -> Val:
     # ** é parcial sobre ℝ: nunca deve vazar exceção do Python nem número complexo

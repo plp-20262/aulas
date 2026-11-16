@@ -26,6 +26,7 @@ class TokenType(Enum):
     FN = auto()          # fn
     IF = auto()          # if
     ELSE = auto()        # else
+    WHILE = auto()       # while
 
 @dataclass(frozen=True)
 class Token:
@@ -67,6 +68,11 @@ class FunDecl(Stmt):
 @dataclass(frozen=True)
 class ExprStmt(Stmt):
     expr: Expr
+
+@dataclass(frozen=True)
+class While(Stmt):
+    cond: Expr
+    body: list[Stmt]    # bloco_cmd: sequência de comandos, sem expressão final
 
 @dataclass(frozen=True)
 class Num(Expr):
@@ -132,6 +138,7 @@ FUNCTION  = match_type(TokenType.FUNCTION)
 FN        = match_type(TokenType.FN)
 IF        = match_type(TokenType.IF)
 ELSE      = match_type(TokenType.ELSE)
+WHILE     = match_type(TokenType.WHILE)
 ASSIGN    = match_type(TokenType.ASSIGN)
 EQUAL     = match_type(TokenType.EQUAL)
 EQEQ      = match_type(TokenType.EQEQ)

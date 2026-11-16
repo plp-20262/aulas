@@ -1,4 +1,4 @@
-# Especificação de `algora`
+# Especificação de `algora` (v2)
 
 A linguagem **Algora** aqui especificada estende a linguagem Aljabr com
 construções imperativas e retorno implícito de expressões (estilo Rust). Ela
@@ -19,6 +19,19 @@ linguagens imperativas e de programação estruturada.
 > _features_ da linguagem podem ser usadas. Por fim, você também pode ver
 > exemplos de pequenos programas no diretório [exemplos](exemplos).
 
+## Versões
+
+| Versão | Mudanças |
+|---|---|
+| v1 | Versão base: estado e mutação (`var`, `:=`), declaração de funções (`def`), lambdas (`fn`), expressão condicional (`if`) e blocos `{ ... }` com retorno implícito. |
+| v2 | Acrescenta o comando de repetição `while`. |
+
+A v2 apenas acrescenta: nenhuma regra da v1 muda (a convenção de erros da §3.5
+só passa a cobrir também a nova relação $\Downarrow_s$). Nas seções abaixo,
+`← NOVO` marca o que é novo em relação a Aljabr, e `← NOVO (v2)` marca o que
+foi introduzido na v2. Como consequência da v2, `while` passa a ser palavra
+reservada e deixa de poder ser usado como nome.
+
 ## Características Aljabr
 
 ### Similaridade com Aljabr
@@ -38,7 +51,8 @@ Algora, contudo, também suporta construções imperativas, mais especificamente
 1. variáveis com estado (mutáveis);
 2. comando de atribuição de variáveis;
 3. comandos de declaração (de variáveis e de funções);
-3. programas como sequências de comandos.
+4. programas como sequências de comandos;
+5. comando de repetição (`while`), a partir da v2.
 
 ### Sintaxe própria, diferente de Aljabr e Algol
 
@@ -61,6 +75,7 @@ FUNCTION  ::=  def             ← NOVO (palavra reservada)
 FN        ::=  fn              (palavra reservada)
 IF        ::=  if              (palavra reservada)
 ELSE      ::=  else            (palavra reservada)
+WHILE     ::=  while           ← NOVO (v2) (palavra reservada)
 LBRACE    ::=  \{              ← NOVO
 RBRACE    ::=  \}              ← NOVO
 SEMICOLON ::=  ;               ← NOVO
@@ -79,7 +94,7 @@ INTEIRO   ::=  [0-9]+
 NOME      ::=  [a-zA-Z_][a-zA-Z0-9_]*  (exceto palavras reservadas)
 ```
 
-**Palavras reservadas:** `var`, `def`, `fn`, `if`, `else`.
+**Palavras reservadas:** `var`, `def`, `fn`, `if`, `else`, `while`.
 
 > **Nota para o Lexer:** `:=` (`ASSIGN`) deve vir antes de `=` (`EQUAL`), assim
 > como `**` vem antes de `*` e `==` vem antes de `=`. Identificadores da
@@ -104,11 +119,14 @@ bloco_corpo ::= { comando } exp
 comando     ::= func_decl
               | var_decl ;
               | atribuicao ;
+              | while_cmd         ← NOVO (v2) (não é seguido de ";")
               | exp ;             ← (exp seguido de ";" é um comando)
 
 var_decl    ::= var NOME := exp
 atribuicao  ::= NOME := exp
 func_decl   ::= def NOME LPAREN [ params ] RPAREN bloco
+while_cmd   ::= while exp bloco_cmd                    ← NOVO (v2)
+bloco_cmd   ::= LBRACE { comando } RBRACE              ← NOVO (v2)
 
 exp         ::= if exp bloco else bloco
               | fn LPAREN [ params ] RPAREN bloco
@@ -125,6 +143,22 @@ atomo       ::= INTEIRO | NOME | LPAREN exp RPAREN | bloco
 params      ::= NOME { , NOME }
 args        ::= exp { , exp }
 ```
+
+Sobre o comando `while` (v2):
+
+- `while e b` repete o corpo `b` enquanto a condição `e` for verdadeira (a
+  semântica está na §3.3).
+- Um `while_cmd` é um **comando**, não uma expressão: não produz valor e não
+  pode aparecer onde se espera uma `exp` (por exemplo, `var x := while ...` é
+  inválido). Como `func_decl`, não é seguido de `;`.
+- O corpo é um `bloco_cmd`: uma sequência de zero ou mais comandos **sem
+  expressão final**. Toda expressão no corpo precisa, portanto, ser seguida de
+  `;` (é um `exp ;`), e o corpo não tem valor.
+- Por não ter valor, um `while_cmd` não pode ser a última coisa de um
+  `bloco_corpo`: ele precisa ser seguido pela expressão final do bloco.
+- Não há ambiguidade entre a condição e o corpo: depois de uma expressão
+  completa, um `{` não pode continuar a expressão (ele só inicia um bloco quando
+  aparece no início de um `atomo`); logo, o próximo `{` abre o corpo.
 
 ## 3. Semântica Operacional (*Big-Step*)
 
@@ -149,6 +183,9 @@ A semântica opera sob um modelo de memória de dois níveis ($\rho, \sigma$):
 
 2. **Avaliação de Expressões e Blocos:** $\langle e, \rho, \sigma \rangle \Downarrow \langle v, \sigma_1 \rangle$  
    (Uma expressão ou bloco $e$ avaliado no ambiente $\rho$ e memória $\sigma$ produz um valor $v \in \mathrm{Val}$ e atualiza a memória para $\sigma_1$)
+
+3. **Execução do Corpo de um Laço** (v2): $\langle b, \rho, \sigma \rangle \Downarrow_s \sigma_1$  
+   (Uma sequência de comandos $b$, o corpo de um `while`, executada no ambiente $\rho$ e memória $\sigma$ produz uma nova memória $\sigma_1$. O ambiente final é descartado: o escopo do corpo termina junto com ele, mas a memória persiste)
 
 
 ### 3.3 Regras de Avaliação de Comandos (*Statements*)
@@ -210,6 +247,89 @@ $$
   \langle e;, \rho, \sigma \rangle \Downarrow \langle \rho, \sigma_1 \rangle
 } \quad \text{(ExprStmt)}
 $$
+
+#### Laço (`while`) — v2
+
+O corpo de um laço é uma sequência de comandos executada em ordem, alterando a
+memória $\sigma_0 \to \sigma_1 \to \dots \to \sigma_n$. Diferentemente de um
+bloco, **não há expressão final**, e o ambiente final $\rho_n$ é **descartado**:
+o escopo do corpo termina com a execução do corpo, mas a memória persiste. (Para
+$n = 0$, tem-se $\sigma_n = \sigma_0$: o corpo vazio não altera a memória.)
+
+$$
+\frac{
+  \langle c_1, \rho, \sigma_0 \rangle \Downarrow \langle \rho_1, \sigma_1 \rangle \quad \dots \quad \langle c_n, \rho_{n-1}, \sigma_{n-1} \rangle \Downarrow \langle \rho_n, \sigma_n \rangle
+}{
+  \langle \{ c_1 \dots c_n \}, \rho, \sigma_0 \rangle \Downarrow_s \sigma_n
+} \quad \text{(BlocoCmd)}
+$$
+
+A condição é numérica, como em `if`: o valor $0$ é falso, e qualquer outro
+número é verdadeiro. Se a condição é falsa, o laço termina sem executar o
+corpo. O ambiente de um comando `while` **não muda**:
+
+$$
+\frac{
+  \langle e, \rho, \sigma \rangle \Downarrow \langle 0, \sigma_1 \rangle
+}{
+  \langle \mathtt{while}\ e\ b, \rho, \sigma \rangle \Downarrow \langle \rho, \sigma_1 \rangle
+} \quad \text{(WhileFalso)}
+$$
+
+Se a condição é verdadeira, o corpo é executado e **o laço é repetido** a partir
+da memória resultante:
+
+$$
+\frac{
+  \begin{matrix}
+  \langle e, \rho, \sigma \rangle \Downarrow \langle n, \sigma_1 \rangle \quad (n \in ℝ,\ n \neq 0) \qquad
+  \langle b, \rho, \sigma_1 \rangle \Downarrow_s \sigma_2 \\
+  \langle \mathtt{while}\ e\ b, \rho, \sigma_2 \rangle \Downarrow \langle \rho, \sigma_3 \rangle
+  \end{matrix}
+}{
+  \langle \mathtt{while}\ e\ b, \rho, \sigma \rangle \Downarrow \langle \rho, \sigma_3 \rangle
+} \quad \text{(WhileVerd)}
+$$
+
+$$
+\frac{
+  \langle e, \rho, \sigma \rangle \Downarrow \langle v_c, \sigma_1 \rangle \qquad v_c \in \mathrm{Clo}
+}{
+  \langle \mathtt{while}\ e\ b, \rho, \sigma \rangle \Downarrow \mathbf{erro}
+} \quad \text{(WhileCondFuncao)}
+$$
+
+Observações:
+
+- **Recursão.** A última premissa de (WhileVerd) contém o próprio `while`: é
+  essa recursão que faz o laço repetir. Em uma implementação, ela corresponde a
+  uma iteração.
+- **Ambiente.** Cada iteração executa o corpo a partir do mesmo $\rho$. Logo, um
+  `var` declarado no corpo não é visível depois do laço, e cada iteração aloca
+  um novo endereço para ele (closures criadas em iterações distintas não
+  compartilham essa variável).
+- **Memória.** É a memória, passada de premissa em premissa
+  ($\sigma \to \sigma_1 \to \sigma_2 \to \sigma_3$), que carrega o "progresso"
+  do laço: a condição só muda de valor porque o corpo (ou a própria condição)
+  altera a memória.
+- **Não terminação.** Se a condição for sempre verdadeira (por exemplo,
+  `while 1 { }`), (WhileVerd) é reaplicada indefinidamente e **não existe
+  derivação**: a semântica passa a ser **parcial**. O determinismo se mantém: em
+  cada ponto, no máximo uma regra se aplica, conforme o valor da condição.
+- **Erros.** Valem a convenção da §3.5 e a regra (WhileCondFuncao), análoga a
+  (IfCondFuncao).
+
+Exemplo:
+
+```text
+var i := 0;
+var soma := 0;
+while i < 5 {
+    soma := soma + i;
+    i := i + 1;
+}
+soma                     // 10
+```
 
 
 ### 3.4 Regras de Avaliação de Expressões e Blocos
@@ -343,5 +463,5 @@ $$
 
 ### 3.5 Convenção Monádica de Propagação de Erros
 
-> Se qualquer premissa da forma $\langle e, \rho, \sigma \rangle \Downarrow \mathbf{erro}$ ou $\langle c, \rho, \sigma \rangle \Downarrow \mathbf{erro}$ produzir $\mathbf{erro}$, a avaliação da regra é interrompida imediatamente e a conclusão de toda a derivação é $\mathbf{erro}$.
+> Se qualquer premissa da forma $\langle e, \rho, \sigma \rangle \Downarrow \mathbf{erro}$, $\langle c, \rho, \sigma \rangle \Downarrow \mathbf{erro}$ ou (v2) $\langle b, \rho, \sigma \rangle \Downarrow_s \mathbf{erro}$ produzir $\mathbf{erro}$, a avaliação da regra é interrompida imediatamente e a conclusão de toda a derivação é $\mathbf{erro}$.
 
