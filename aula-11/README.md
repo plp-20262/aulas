@@ -1,4 +1,4 @@
-## Aula 11 — 19/Out — Unidade 4: Funções e closures (parte 2/4)
+# Aula 11 — 19/Out — Unidade 4: Funções e closures (parte 2/4)
 
 > Tema da aula: início da especificação formal de `aljabr` v2 (que difere de
 > `v1` pela introdução de lambdas e closures).
