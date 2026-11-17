@@ -174,6 +174,12 @@ Primeiro, façamos para `exp`
 exp   ::= termo exp'
 exp'  ::= + termo exp' | - termo exp' | ε
 ```
+Em seguida, façamos para `termo`
+
+```python
+termo   ::= fator termo'
+termo'  ::= * fator termo' | / fator termo' | ε
+```
 
 #### Passo 2: Fatoramento à esquerda de `fator`
 
