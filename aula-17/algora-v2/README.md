@@ -160,6 +160,16 @@ Sobre o comando `while` (v2):
   completa, um `{` não pode continuar a expressão (ele só inicia um bloco quando
   aparece no início de um `atomo`); logo, o próximo `{` abre o corpo.
 
+> **Observações sobre a sintaxe do `while` (v2):**
+>
+> - Um `while_cmd` é um comando e **não leva `;`** depois (igual a
+>   `func_decl`). Após o `}` que fecha o corpo, o próximo comando ou a expressão
+>   final do bloco começa diretamente, sem ponto-e-vírgula separador.
+> - Todo bloco `{ ... }` (programa, corpo de `def`/`fn`, ramos de `if`) exige
+>   uma expressão final. O corpo do `while` (`bloco_cmd`) é a exceção: é
+>   composto apenas de comandos, sem expressão final.
+> - Um `while` dentro do corpo de outro `while` também não leva `;`.
+
 ## 3. Semântica Operacional (*Big-Step*)
 
 ### 3.1 Domínios Semânticos

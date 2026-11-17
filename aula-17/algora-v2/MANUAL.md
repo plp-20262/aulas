@@ -146,7 +146,7 @@ Resultado: `120`.
 
 Notas:
 
-- Não existem laços (`while`, `for`). A repetição é feita com recursão.
+- Laços são feitos com `while` (veja a seção "Laços com `while`").
 - Funções são valores comuns: podem ser passadas como argumento, devolvidas e guardadas em variáveis.
 - Chamadas encadeiam: `f(1)(2)` chama `f(1)` e aplica o resultado a `2`.
 - Os argumentos são avaliados da esquerda para a direita e passados **por valor**. Os parâmetros são variáveis locais, então atribuir a um parâmetro não afeta o chamador.
@@ -161,6 +161,29 @@ Resultado: `20`.
 
 > Para recursão, use `def`. Com `var f := fn(n) { ... f(n - 1) ... }`, o nome `f` ainda não existe quando a função é criada, então a chamada recursiva falha.
 
+
+## Laços com `while`
+
+O comando `while` repete um corpo de comandos enquanto a condição for verdadeira (`0` é falso, qualquer outro número é verdadeiro).
+
+```
+var i := 0;
+var soma := 0;
+while i < 5 {
+    soma := soma + i;
+    i := i + 1;
+}
+soma
+```
+
+Resultado: `10`.
+
+Regras importantes:
+
+- O corpo é um bloco de comandos, **sem expressão final**. Cada expressão dentro do corpo precisa terminar com `;` (é um `exp ;`).
+- O `while` é um comando e **não leva `;`** depois do `}` que fecha o corpo. O próximo comando ou a expressão final do programa começa diretamente a seguir.
+- O `while` não produz valor: não pode ser a última coisa do programa nem aparecer onde se espera uma expressão (por exemplo, `var x := while ...` é inválido).
+- A condição é numérica, como em `if`. Usar uma função como condição de `while` é erro.
 
 ## 7. Closures e estado
 
@@ -200,7 +223,7 @@ Quando algo dá errado, a avaliação inteira termina em **erro**. Os casos poss
 - usar ou atribuir a uma variável não declarada;
 - chamar um valor que não é função;
 - chamar uma função com número errado de argumentos;
-- usar uma função como condição de `if`.
+- usar uma função como condição de `if` ou de `while`.
 
 
 ## 9. Referência rápida
@@ -215,7 +238,8 @@ Quando algo dá errado, a avaliação inteira termina em **erro**. Os casos poss
 | Condicional | `if exp { ... } else { ... }` | expressão |
 | Função anônima | `fn(a, b) { ... }` | expressão |
 | Chamada | `f(a, b)` | expressão |
+| Repetição | `while exp { ... }` | comando (sem `;`) |
 
-**Palavras reservadas:** `var`, `def`, `fn`, `if`, `else`.
+**Palavras reservadas:** `var`, `def`, `fn`, `if`, `else`, `while`.
 
 **Identificadores:** letras, dígitos e `_`, sem começar por dígito.
