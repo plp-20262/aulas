@@ -1,4 +1,5 @@
 import sys
+import argparse
 from dataclasses import dataclass
 from tipos import Ast, Erro, monadic_error, Token, TokenType
 from lexer import tokenizador
@@ -118,6 +119,29 @@ def casa(padrao: Ast, valor: Val) -> dict[str, Val] | None:
 
     # Qualquer outro caso: ⊥
     return None
+
+
+# aljabr v4: função de apresentação (não afeta a semântica).
+# Formata um valor Val para exibição legível no terminal.
+# Usada apenas pelo main() quando a flag -p/--pretty-print está ativa.
+def formatar_valor(v: Val) -> str:
+    """Converte um valor Val em string legível para exibição.
+
+    Valores etiquetados (Tagged) são impressos como construtores:
+      Tagged('Cons', (1, Tagged('VaziaLista', ())))  ->  "Cons(1, VaziaLista)"
+      Tagged('VaziaLista', ())                       ->  "VaziaLista"
+
+    Erros e fechamentos recebem representação simplificada.
+    Números são impressos normalmente.
+    """
+    if isinstance(v, Tagged):
+        args = ", ".join(formatar_valor(a) for a in v.args)
+        return f"{v.tag}({args})" if v.args else v.tag
+    if isinstance(v, Erro):
+        return f"Erro({v.msg})"
+    if isinstance(v, Closure):
+        return "<funcao>"
+    return str(v)
 
 
 @monadic_error
@@ -324,8 +348,21 @@ def eval(ast: Ast, env: Environment, delta: dict[str, int] | None = None) -> Val
 
 
 def main():
-    if len(sys.argv) > 1:
-        programa = open(sys.argv[1]).read()
+    parser_cli = argparse.ArgumentParser(description="Interpretador de aljabr v4")
+    parser_cli.add_argument(
+        "-p", "--pretty-print",
+        action="store_true",
+        help="imprime valores etiquetados de forma simplificada (ex.: Cons(1, Vazia))",
+    )
+    parser_cli.add_argument(
+        "arquivo",
+        nargs="?",
+        help="arquivo .al com o programa (omite para ler da entrada padrão)",
+    )
+    args = parser_cli.parse_args()
+
+    if args.arquivo:
+        programa = open(args.arquivo).read()
     else:
         programa = sys.stdin.read()
 
@@ -348,7 +385,11 @@ def main():
     significado = eval(ast, env, delta)
 
     print(f"{programa}")
-    print(f"-->  {significado}")
+    if args.pretty_print:
+        # Apenas apresentação: formata Tagged de forma legível
+        print(f"-->  {formatar_valor(significado)}")
+    else:
+        print(f"-->  {significado}")
 
 
 if __name__ == "__main__":
