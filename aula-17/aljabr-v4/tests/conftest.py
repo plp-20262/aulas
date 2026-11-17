@@ -2,7 +2,7 @@ import pytest
 from tipos import Erro, Token, TokenType
 from aljabr import Environment, eval
 from lexer import tokenizador
-from parser import parser
+from parser import parser, parse_programa
 
 
 @pytest.fixture
@@ -71,8 +71,15 @@ def run(code: str):
 
     Devolve o valor resultante ou um Erro. Usado pelos testes ponta-a-ponta
     da tabela de programas da §4.4 do README (v2).
+
+    Passa o conjunto de construtores declarados (delta) para o avaliador,
+    necessário para validar construções de valores etiquetados (v4).
     """
-    ast = parse_code(code)
-    if isinstance(ast, Erro):
-        return ast
-    return eval(ast, {})
+    tokens = tokenizador(code)
+    if isinstance(tokens, Erro):
+        return tokens
+    resultado = parse_programa(tokens)
+    if isinstance(resultado, Erro):
+        return resultado
+    ast, delta = resultado
+    return eval(ast, {}, delta)

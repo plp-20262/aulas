@@ -22,8 +22,8 @@ class TestEvalV4:
         assert not isinstance(resultado, Erro), f"Erro inesperado: {resultado}"
 
     def test_construir_valor_com_componentes(self):
-        """`Cons(1, Vazia)` constrói valor etiquetado."""
-        resultado = run("type T = Cons(h, t)\nCons(1, Vazia)")
+        """`Cons(1, 2)` constrói valor etiquetado (Cons/2 declarado)."""
+        resultado = run("type T = Cons(h, t)\nCons(1, 2)")
         assert not isinstance(resultado, Erro), f"Erro inesperado: {resultado}"
 
     # --- 2. CONSTRUTOR NÃO DECLARADO (ConsInvalido) ---

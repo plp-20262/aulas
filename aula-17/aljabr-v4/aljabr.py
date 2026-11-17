@@ -2,7 +2,7 @@ import sys
 from dataclasses import dataclass
 from tipos import Ast, Erro, monadic_error, Token, TokenType
 from lexer import tokenizador
-from parser import parser
+from parser import parser, parse_programa
 
 # tabela de operações da linguagem
 OPERACAO = {
@@ -65,12 +65,69 @@ class Closure:
     env: "Environment"        # ρ0 — ambiente de criação, "congelado" pela cópia
 
 
-# aljabr v2 (§3): Val = ℝ ∪ Clo ∪ {erro}
-type Val = int | float | Erro | Closure
+# aljabr v4 (§3): Val = ℝ ∪ Clo ∪ Tag ∪ {erro}
+# Valores etiquetados K(v1,...,vn) — dataclass imutável ao lado de Closure,
+# seguindo o mesmo estilo (§4.3).
+@dataclass(frozen=True)
+class Tagged:
+    tag: str      # K — nome do construtor
+    args: tuple   # (v1, ..., vn) — valores dos componentes
+
+
+# aljabr v4 (§3): Val = ℝ ∪ Clo ∪ Tag ∪ {erro}
+type Val = int | float | Erro | Closure | Tagged
+
+
+# aljabr v4 (§3): relação auxiliar casa(p, v) = θ ou ⊥
+# Implementa (PVar), (PCuringa), (PLit), (PCons) do README.md.
+# Retorna um dicionário {variavel: valor} se o padrão casa, ou None se não casa.
+def casa(padrao: Ast, valor: Val) -> dict[str, Val] | None:
+    # (PVar): casa(x, v) = {x -> v}
+    if isinstance(padrao, str) and padrao != "_":
+        return {padrao: valor}
+
+    # (PCuringa): casa(_, v) = {}
+    if padrao == "_":
+        return {}
+
+    # (PLit): casa(n, n) = {} se o valor é o mesmo inteiro
+    if isinstance(padrao, int):
+        if isinstance(valor, int) and padrao == valor:
+            return {}
+        return None
+
+    # (PCons): casa(K(p1,...,pn), K(v1,...,vn)) = theta1 U ... U thetan
+    if isinstance(padrao, list) and padrao and padrao[0] == "construtor-padrao":
+        _, nome, subpadroes = padrao
+        if not isinstance(valor, Tagged) or valor.tag != nome:
+            return None
+        if len(subpadroes) != len(valor.args):
+            return None
+        resultado: dict[str, Val] = {}
+        for p, v in zip(subpadroes, valor.args):
+            theta = casa(p, v)
+            if theta is None:
+                return None
+            # Verificar variáveis duplicadas no padrão (já validado pelo parser,
+            # mas mantido como defesa aqui)
+            for var in theta:
+                if var in resultado:
+                    return None
+            resultado.update(theta)
+        return resultado
+
+    # Qualquer outro caso: ⊥
+    return None
 
 
 @monadic_error
-def eval(ast: Ast, env: Environment) -> Val:
+def eval(ast: Ast, env: Environment, delta: dict[str, int] | None = None) -> Val:
+    # delta: conjunto de construtores declarados (nome -> aridade).
+    # É opcional (default {}) para manter compatibilidade com chamadas
+    # no estilo v3: eval(ast, env).
+    if delta is None:
+        delta = {}
+
     # Regra (Num): ⟨n, ρ⟩ ⇓ n
     if isinstance(ast, int):
         return ast
@@ -96,11 +153,11 @@ def eval(ast: Ast, env: Environment) -> Val:
     # {**env, var: v1} cria novo dicionário (ρ[x↦v1] é nova função, não muta ρ)
     if len(ast) == 4 and ast[0] == "let":
         _, var, e1, e2 = ast
-        v1 = eval(e1, env)
+        v1 = eval(e1, env, delta)
         if isinstance(v1, Erro):
             return v1
         new_env = {**env, var: v1}
-        return eval(e2, new_env)
+        return eval(e2, new_env, delta)
 
     # Regra (LetRec) (v3, §2): ⟨letrec f = fn (p1,...,pn) ⇒ e_f in e2, ρ⟩ ⇓ v2
     # Com a primeira premissa EM EQUAÇÃO (não passo a passo): ρ1 é o ρ em
@@ -111,21 +168,71 @@ def eval(ast: Ast, env: Environment) -> Val:
         novo_env: Environment = dict(env)
         novo_env[var] = Closure(tuple(fn_ast[1]), fn_ast[2], novo_env)
         # a segunda premissa é avaliada no ρ1 recém-construído
-        return eval(body, novo_env)
+        return eval(body, novo_env, delta)
 
-    # Regra (If) (v3, §2): ⟨if c then e1 else e2, ρ⟩ ⇓ v
+    # Regra (If) (v3/v4, §2): ⟨if c then e1 else e2, ρ⟩ ⇓ v
     # (IfVerd)   ⟨c,ρ⟩⇓n, n ∈ ℝ, n ≠ 0  ⇒  ⟨e1,ρ⟩⇓v
     # (IfFalso)  ⟨c,ρ⟩⇓n, n = 0         ⇒  ⟨e2,ρ⟩⇓v
-    # (IfCond)   ⟨c,ρ⟩⇓clo             ⇒  erro (condição não é valor)
+    # (IfCond)   ⟨c,ρ⟩⇓v_c, v_c ∉ ℝ     ⇒  erro (condição não é número)
+    #            (ajuste v4: cobre closures E valores etiquetados)
     if len(ast) == 4 and ast[0] == "if":
         cond = eval(ast[1], env)
         if isinstance(cond, Erro):
             return cond  # propagação monádica (convenção §3)
-        if isinstance(cond, Closure):
-            return Erro("RUNTIME: condição de 'if' é uma função")
+        if not isinstance(cond, (int, float)):
+            return Erro("RUNTIME: condição de 'if' não é um número")
         if cond != 0:  # (IfVerd): n ≠ 0
-            return eval(ast[2], env)
-        return eval(ast[3], env)  # (IfFalso): n = 0
+            return eval(ast[2], env, delta)
+        return eval(ast[3], env, delta)  # (IfFalso): n = 0
+
+    # aljabr v4 (§3): construção de valor etiquetado — (Cons) / (ConsInvalido)
+    # AST: ["construir", nome, args]
+    if len(ast) == 3 and ast[0] == "construir":
+        _, nome, args = ast
+
+        # (ConsInvalido): construtor não declarado ou aridade errada → erro.
+        # Verificação vem ANTES de avaliar os argumentos (como (AppAridade)).
+        if nome not in delta:
+            return Erro(
+                f"RUNTIME: construtor '{nome}' não declarado"
+            )
+        aridade_esperada = delta[nome]
+        if len(args) != aridade_esperada:
+            return Erro(
+                f"RUNTIME: aridade incorreta para '{nome}': "
+                f"esperava {aridade_esperada} argumento(s), "
+                f"recebeu {len(args)}"
+            )
+
+        # (Cons): avaliar argumentos e construir K(v1, ..., vn)
+        valores: list[Val] = []
+        for a in args:
+            v = eval(a, env, delta)
+            if isinstance(v, Erro):
+                return v  # propagação de erro
+            valores.append(v)
+        return Tagged(nome, tuple(valores))
+
+    # aljabr v4 (§3): expressão match — (Match) / (MatchNenhum)
+    # AST: ["match", alvo, [(padrao, corpo), ...]]
+    if len(ast) == 3 and ast[0] == "match":
+        _, alvo, ramos = ast
+
+        # 1ª premissa de (Match): avaliar o alvo
+        v = eval(alvo, env)
+        if isinstance(v, Erro):
+            return v  # propagação de erro
+
+        # Tentar ramos de cima para baixo (ordem está na regra)
+        for padrao, corpo in ramos:
+            theta = casa(padrao, v)
+            if theta is not None:
+                # (Match): primeiro ramo que casa; estende ambiente com θ
+                novo_env: Environment = {**env, **theta}
+                return eval(corpo, novo_env, delta)
+
+        # (MatchNenhum): nenhum ramo casa → erro
+        return Erro("RUNTIME: match sem ramo que casa com o valor")
 
     # --- aljabr v2 (§3): regras novas de funções ---
     # Os nós novos têm TAG de string em ast[0] ("fn" e "app"), enquanto os
@@ -147,7 +254,7 @@ def eval(ast: Ast, env: Environment) -> Val:
         _, e_f, args = ast
 
         # Premissa 1: ⟨e_f, ρ⟩ ⇓ v_f  (ρ é o ambiente DE CHAMADA)
-        v_f = eval(e_f, env)
+        v_f = eval(e_f, env, delta)
         if isinstance(v_f, Erro):
             return v_f  # propagação: a regra (App) não se aplica
 
@@ -167,7 +274,7 @@ def eval(ast: Ast, env: Environment) -> Val:
         # Premissas 2: ⟨a_i, ρ⟩ ⇓ v_i (argumentos no ambiente de chamada)
         vals: list[Val] = []
         for a in args:
-            v = eval(a, env)
+            v = eval(a, env, delta)
             if isinstance(v, Erro):
                 return v  # convenção: o erro interrompe a aplicação
             vals.append(v)
@@ -178,14 +285,14 @@ def eval(ast: Ast, env: Environment) -> Val:
         novo_env: Environment = {**v_f.env, **dict(zip(v_f.params, vals))}
 
         # Premissa 4: ⟨e_b, ρ0[...]⟩ ⇓ v — o valor da aplicação é o do corpo
-        return eval(v_f.corpo, novo_env)
+        return eval(v_f.corpo, novo_env, delta)
 
     # Operador unário: aplica (Op) com f_op↑, ver "Operações Aritméticas"
     if len(ast) == 2:
         op_token, expr = ast[0], ast[1]
         if not isinstance(op_token, Token) or op_token.type not in (TokenType.ADD, TokenType.SUB):
             return Erro(f"RUNTIME: operador unário inválido '{op_token}'")
-        v = eval(expr, env)
+        v = eval(expr, env, delta)
         if isinstance(v, Erro):
             return v
         operador = "u+" if op_token.type == TokenType.ADD else "u-"
@@ -199,10 +306,10 @@ def eval(ast: Ast, env: Environment) -> Val:
         op_token, e1, e2 = ast[0], ast[1], ast[2]
         if not isinstance(op_token, Token):
             return Erro(f"RUNTIME: operador inválido '{op_token}'")
-        v1 = eval(e1, env)
+        v1 = eval(e1, env, delta)
         if isinstance(v1, Erro):
             return v1
-        v2 = eval(e2, env)
+        v2 = eval(e2, env, delta)
         if isinstance(v2, Erro):
             return v2
         operador = op_token.lexema
@@ -223,11 +330,22 @@ def main():
         programa = sys.stdin.read()
 
     tokens = tokenizador(programa)
-    ast = parser(tokens)
-    
+    if isinstance(tokens, Erro):
+        print(f"{programa}")
+        print(f"-->  {tokens}")
+        return
+
+    # parse_programa retorna (ast, delta): AST e conjunto de construtores
+    resultado = parse_programa(tokens)
+    if isinstance(resultado, Erro):
+        print(f"{programa}")
+        print(f"-->  {resultado}")
+        return
+    ast, delta = resultado
+
     # O ambiente ρ inicia vazio para aljabr
     env: Environment = {}
-    significado = eval(ast, env)
+    significado = eval(ast, env, delta)
 
     print(f"{programa}")
     print(f"-->  {significado}")
