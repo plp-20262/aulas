@@ -1,16 +1,15 @@
-# `MANUAL.md` — Manual do usuário de `aljabr` v3
+# `MANUAL.md` — Manual do usuário de `aljabr` v4
 
 Este manual é o complemento da especificação formal (`README.md`). Use-o para
 entender de modo geral a linguagem, executar o interpretador, rodar a suíte de
 testes e programar exemplos. O essencial da especificação formal (léxico,
 sintaxe e semântica) está em `README.md`.
 
----
 
 ## 1. Sobre este manual
 
-`aljabr` é uma mini-linguagem funcional projetada para um curso de Linguagens
-de Programação. Na versão `v3` ela inclui:
+Aljabr é uma mini-linguagem funcional projetada para nosso curso de Paradigmas
+de Linguagens de Programação. Na versão `v4` ela inclui:
 
 - vinculações locais (`let .. in`) e vinculações recursivas (`letrec`);
 - funções anônimas (`fn`) e aplicações (`f(args)`);
@@ -18,17 +17,20 @@ de Programação. Na versão `v3` ela inclui:
 - operadores aritméticos (`+ - * / **`), unários (`+ -`) e de comparação
   (`== <`);
 - operador de entrada (`?`, lê um inteiro da entrada padrão);
-- valores: números (inteiros e floats), closures e o valor especial `erro`.
+- valores: números (inteiros e floats), closures e valores etiquetados
+  (tipos algébricos, construídos com construtores como `Num`, `Add`, `Vazia`,
+  `Cons`, …);
+- declarações de tipos (`type`) e casamento de padrões (`match`), que permitem
+  definir e desestruturar dados compostos.
 
 A especificação formal completa está em `README.md`. Este manual foca em como
 **executar**, **testar** e **usar** a linguagem.
 
----
 
 ## 2. Como executar e testar
 
 Todos os comandos abaixo assumem que você está no diretório deste projeto
-(`aula-17/aljabr-v3`).
+(`aula-17/aljabr-v4`).
 
 ### Pré-requisitos
 
@@ -44,19 +46,19 @@ python3 -m pip install pytest
 A suíte de testes fica no diretório `tests/` e é dividida nos seguintes
 arquivos:
 
-| Arquivo                    | O que testa                                                                        |
-|----------------------------|------------------------------------------------------------------------------------|
-| `tests/test_lexer.py`      | o tokenizador (literais, operadores, `NOME`, palavras reservadas, erros léxicos)   |
-| `tests/test_parser.py`     | o parser de expressões aritméticas (bem formadas e erros)                          |
-| `tests/test_eval.py`       | o avaliador `eval` (operadores, precedência, propagação de erros)                  |
-| `tests/test_let_parser.py` | o parser das vinculações `let..in`                                                 |
-| `tests/test_let_eval.py`   | o avaliador `eval` para variáveis e `let..in`                                      |
-| `tests/test_fn_parser.py`  | o parser de lambdas e aplicações                                                   |
-| `tests/test_fn_eval.py`    | o avaliador `eval` para lambdas, aplicações e escopo léxico                        |
-| `tests/test_if_parser.py`  | o parser de `if..then..else`                                                       |
-| `tests/test_if_eval.py`    | o avaliador `eval` para `if`                                                       |
-| `tests/test_letrec_parser.py` | o parser de `letrec`                                                              |
-| `tests/test_letrec_eval.py` | o avaliador `eval` para `letrec`                                                   |
+| Arquivo                       | O que testa                                                                        |
+|-------------------------------|------------------------------------------------------------------------------------|
+| `tests/test_lexer.py`         | o tokenizador (literais, operadores, `NOME`, palavras reservadas, erros léxicos)   |
+| `tests/test_parser.py`        | o parser de expressões aritméticas (bem formadas e erros)                          |
+| `tests/test_eval.py`          | o avaliador `eval` (operadores, precedência, propagação de erros)                  |
+| `tests/test_let_parser.py`    | o parser das vinculações `let..in`                                                 |
+| `tests/test_let_eval.py`      | o avaliador `eval` para variáveis e `let..in`                                      |
+| `tests/test_fn_parser.py`     | o parser de lambdas e aplicações                                                   |
+| `tests/test_fn_eval.py`       | o avaliador `eval` para lambdas, aplicações e escopo léxico                        |
+| `tests/test_if_parser.py`     | o parser de `if..then..else`                                                       |
+| `tests/test_if_eval.py`       | o avaliador `eval` para `if`                                                       |
+| `tests/test_letrec_parser.py` | o parser de `letrec`                                                               |
+| `tests/test_letrec_eval.py`   | o avaliador `eval` para `letrec`                                                   |
 
 Para rodar a suíte inteira:
 
@@ -71,11 +73,6 @@ python3 -m pytest tests/test_lexer.py
 python3 -m pytest tests/test_parser.py -k "unclosed_paren"
 ```
 
-Espera-se algo como `331 passed, 2 xfailed`. Os dois `xfail` são testes que
-documentam **limitações conhecidas** do parser atual (erros de subparsers não
-são propagados em `parse_exp`/`parse_termo`); eles falham de propósito e
-devem começar a passar quando o parser for corrigido.
-
 Observações:
 
 - não há `pyproject.toml` nem `setup.py` neste diretório, de propósito: os
@@ -84,7 +81,7 @@ Observações:
 - **não rode `pytest` sem caminho a partir da raiz do repositório**: há
   outro pacote chamado `tests/` em `aula-11/aljabr-v1` e a coleta
   colidiria. Sempre especifique o caminho, por exemplo:
-  `python3 -m pytest aula-17/aljabr-v3/tests`.
+  `python3 -m pytest aula-17/aljabr-v4/tests`.
 
 ### Executar
 
@@ -130,7 +127,6 @@ Cada execução do interpretador processa **uma única expressão** (o arquivo
 ou a entrada padrão inteira é lida como um programa). Exemplos de programas
 prontos estão no diretório `exemplos/`.
 
----
 
 ## 3. Conjunto de testes
 
@@ -167,7 +163,6 @@ E os programas abaixo devem ser **rejeitados pelo parser**:
 `let fn = 1 in fn`, `if x then 1`, `letrec x = 5 in x`,
 `1 + if 1 then 2 else 3`, `let if = 1 in if`.
 
----
 
 ## 4. Exemplos em `exemplos/`
 
@@ -192,7 +187,7 @@ abaixo resume cada um, o que demonstra e a saída esperada ao executar
 | `if2.al` | `if` em Church: ramo não escolhido com divisão por zero → `erro` | `erro: divisão por zero` |
 | `if3.al` | `if` em Church com thunks (adiação de avaliação) | `1` |
 | `booleans.al` | booleans em Church (várias expressões no arquivo) | *erro de sintaxe* (uma expressão por execução) |
-| `fatorial.al` | `let if = ...` — `if` é palavra reservada em v3 | *erro de sintaxe* |
+| `fatorial.al` | `let if = ...` — `if` é palavra reservada em v4 | *erro de sintaxe* |
 | `omega.al` | não-terminação: `(fn (x) => x(x))(fn (x) => x(x))` | não termina (`RecursionError`) |
 | `omega2.al` | não-terminação: `let m = fn (x) => x(x) in m(m)` | não termina (`RecursionError`) |
 | `omega3.al` | não-terminação com `letrec` implícito | não termina (`RecursionError`) |
@@ -202,16 +197,150 @@ Notas:
 - `booleans.al` contém várias expressões de nível superior no mesmo arquivo.
   O interpretador aceita **uma única expressão** por execução, então esse
   arquivo gera um erro de sintaxe ("tokens depois da expressão").
-- `fatorial.al` vincula o nome `if` em um `let`. Em `aljabr` v3, `if` é uma
+- `fatorial.al` vincula o nome `if` em um `let`. Em `aljabr` v4, `if` é uma
   palavra reservada, portanto não pode ser usado como nome de variável; o
   parser rejeita o programa.
 - Os programas `omega*`, `omega2.al` e `omega3.al` expressam não-terminação
   (ponto fixo de Curry). O interpretador esgota a pilha de recursão do Python
   (`RecursionError`) em vez de rodar para sempre.
 
----
 
-## 5. Diferenças da versão v2 para a v3
+## 5. Novas features da versão v4
+
+A versão `v4` acrescenta à `v3` dois mecanismos para trabalhar com dados
+compostos: **declarações de tipos algébricos** (`type`) e **casamento de
+padrões** (`match`). Esta seção explica cada um com pequenos exemplos.
+
+### 5.1 Declarando tipos com `type`
+
+Uma declaração de tipo associa um nome (documentação) a um conjunto de
+**construtores** separados por `|`. Cada construtor pode ter zero ou mais
+componentes.
+
+```aljabr
+type Lista = Vazia | Cons(cabeca, cauda)
+type Expr  = Num(n) | Add(esq, dir) | Mul(esq, dir)
+type Opcao = Algum(n) | Nada
+```
+
+- `Vazia`, `Nada` são construtores sem componentes (aridade 0).
+- `Cons(cabeca, cauda)`, `Num(n)`, `Add(esq, dir)` são construtores com
+  componentes.
+
+**Construtores começam com letra maiúscula** (`CONSTR`); variáveis começam com
+letra minúscula (`NOME`). Por isso `Num` é um construtor, enquanto `num` seria
+uma variável.
+
+### 5.2 Construindo valores etiquetados
+
+Para criar um valor de um tipo algébrico, escreve-se o construtor seguido de
+parênteses com os argumentos (ou apenas o nome, se não houver componentes).
+
+```aljabr
+Cons(1, Vazia)
+Add(Num(2), Num(3))
+Nada
+Vazia
+```
+
+Valores etiquetados são imutáveis e guardam valores (não localizações). Você
+pode misturar construtores de tipos diferentes — a linguagem continua
+dinamicamente tipada, o nome do tipo (`Lista`, `Expr`) é apenas documentação.
+
+### 5.3 Casamento de padrões com `match`
+
+A expressão `match` avalia uma expressão alvo e escolhe o **primeiro** ramo
+cujo padrão casa com o valor. As variáveis do padrão ficam vinculadas **só**
+dentro do corpo do ramo escolhido.
+
+```aljabr
+match lista {
+  Vazia    => 0
+  Cons(_, r) => 1 + tamanho(r)
+}
+```
+
+Regras importantes:
+
+1. **Avalia o alvo** (`lista`) até obter um valor.
+2. **Tenta os ramos de cima para baixo**; o primeiro que casa vence.
+3. **Casar = testar a forma e extrair componentes.** `Cons(_, r)` testa que o
+   valor é um `Cons` e vincula `r` à cauda.
+4. **Só o ramo escolhido é avaliado.** Os demais nunca são executados.
+5. **Se nenhum ramo casa**, o resultado é `erro`.
+
+Exemplo completo — tamanho de uma lista:
+
+```aljabr
+type Lista = Vazia | Cons(cabeca, cauda)
+
+letrec tamanho = fn (xs) =>
+  match xs {
+    Vazia       => 0
+    Cons(_, r)  => 1 + tamanho(r)
+  }
+in tamanho(Cons(1, Cons(2, Cons(3, Vazia))))
+```
+
+Resultado: `3`.
+
+### 5.4 Padrões disponíveis
+
+| Padrão | Casa quando… | Vincula? | Exemplo |
+|--------|--------------|----------|---------|
+| variável | sempre | sim, ao valor inteiro | `x` |
+| curinga | sempre | não | `_` |
+| literal inteiro | o valor é igual ao inteiro | não | `0` |
+| construtor | a etiqueta coincide e cada subpadrão casa | o que os subpadrões vincularem | `Add(a, b)` |
+| aninhado | idem, recursivamente | idem | `Add(Num(0), x)` |
+
+Variáveis repetidas em um mesmo padrão (ex.: `Add(x, x)`) são rejeitadas pelo
+parser.
+
+### 5.5 Exemplo: simplificação de expressões aritméticas
+
+```aljabr
+type Expr = Num(n) | Add(esq, dir) | Mul(esq, dir)
+
+let simplifica = fn (e) =>
+  match e {
+    Add(Num(0), x)   => x
+    Add(x, Num(0))   => x
+    Mul(Num(1), x)   => x
+    Mul(x, Num(1))   => x
+    Mul(Num(0), _)   => Num(0)
+    _                => e
+  }
+in simplifica(Add(Num(0), Num(7)))
+```
+
+Resultado: `Num(7)`.
+
+A ordem dos ramos importa: se `_ => e` viesse primeiro, ele casaria com tudo
+e nenhuma das regras de simplificação seria aplicada.
+
+
+## 6. Diferenças da versão v3 para a v4
+
+1. Novas palavras reservadas: `type`, `match` e `_`.
+2. Novas categorias léxicas: `CONSTR` (construtores/nomes de tipos), `PIPE`
+   (`|`), `LBRACE` (`{`) e `RBRACE` (`}`).
+3. Programa de nível superior aceita declarações `type` antes da expressão
+   final (`programa ::= { tipo_decl } exp`).
+4. `atomo` aceita construção de valores etiquetados: `Cons(1, Vazia)`, `Vazia`.
+5. Nova expressão `match exp { padrao => exp }` para desestruturar valores
+   etiquetados.
+6. Novos padrões: `INTEIRO`, `_`, `NOME`, `CONSTR [ ( padrao { , padrao } ) ]`.
+7. A regra (IfCond) agora cobre qualquer condição que não seja número (não só
+   closures): `if Num(1) then …` resulta em `erro`.
+8. Não há igualdade estrutural entre valores etiquetados: `Num(1) == Num(1)`
+   resulta em `erro` (o `lift` das operações devolve `erro` fora de `ℝ`).
+
+O poder computacional da v3 já era Turing equivalente; a v4 adiciona
+conveniência para modelar dados compostos e desestruturá-los de forma direta.
+
+
+## 7. Diferenças da versão v2 para a v3 (resumo)
 
 1. Novas palavras reservadas: `letrec`, `if`, `then`, `else`.
 2. Novos operadores: `==` (igualdade) e `<` (menor que), no novo nível
@@ -223,5 +352,48 @@ Notas:
 5. `atomo` aceita `let NOME = exp in exp`.
 6. O corpo aditivo da v2 (`termo { (+|-) termo }`) foi renomeado para `soma`.
 
-O poder computacional da v2 já era Turing equivalente; a v3 adiciona
-conveniência para expressar seleção de caminhos e recursão de forma direta.
+
+## 8. Erros
+
+Quando algo dá errado, a avaliação inteira termina em **erro**. Os casos
+possíveis são:
+
+- usar uma variável não vinculada;
+- divisão por zero;
+- operação aritmética ou de comparação sobre um valor não numérico
+  (por exemplo, `Num(1) + 2`, `Num(1) == Num(2)`, `if Num(1) then …`);
+- chamar um valor que não é função (`5(3)`, `q + 1` onde `q` é uma função);
+- chamar uma função com número errado de argumentos (`f(1)` esperando dois);
+- construção com construtor não declarado (`Foo(1)`) ou aridade errada
+  (`Num()` com `Num/1`);
+- `match` no qual nenhum ramo casa com o valor.
+
+Todos esses erros são propagados estritamente: `let x = 1/0 in 5` vale
+`erro`, e não `5`.
+
+
+## 9. Referência rápida
+
+| Construção | Forma | Tipo |
+|------------|-------|------|
+| Vinculação local | `let x = exp in exp` | expressão |
+| Vinculação recursiva | `letrec f = fn (p) => exp in exp` | expressão |
+| Função anônima | `fn (p1, …, pn) => exp` | expressão |
+| Chamada | `f(a1, …, an)` | expressão |
+| Condicional | `if c then e1 else e2` | expressão |
+| Declaração de tipo | `type T = K1 | K2(a, b)` | declaração (nível superior) |
+| Construtor | `K` ou `K(a1, …, an)` | expressão (atomo) |
+| Casamento de padrões | `match e { p1 => e1 … pm => em }` | expressão |
+| Operador binário | `e1 + e2`, `e1 == e2`, `e1 < e2`, … | expressão |
+| Operador unário | `+e`, `-e` | expressão |
+| Inteiro | `0`, `42`, … | expressão |
+| Entrada | `?` | expressão |
+
+**Palavras reservadas:** `let`, `in`, `fn`, `letrec`, `if`, `then`, `else`,
+`type`, `match`, `_`.
+
+**Identificadores (`NOME`):** letra minúscula ou `_`, seguidos de letras,
+dígitos e `_`, sem começar por dígito e não sendo uma palavra reservada.
+
+**Construtores (`CONSTR`):** letra maiúscula, seguidos de letras, dígitos e
+`_`.
