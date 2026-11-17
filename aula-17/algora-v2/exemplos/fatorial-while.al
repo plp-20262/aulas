@@ -7,4 +7,4 @@ def fatorial(n) {
   fat
 }
 
-fatorial(6)
+fatorial(7)
