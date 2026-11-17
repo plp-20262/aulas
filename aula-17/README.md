@@ -1,45 +1,5 @@
 # Aula 17 — 16/Nov — Fecho da Unidade 6 + Unidade 7 (1/3): Tipos Algébricos e `aljabr` v4
 
-> **Organização da aula** (ciclo reduzido do segundo estágio, ver §2.2 do plano de curso):
->
-> 1. **Fecho da Aula 16 (≈ 12 min):** o comando `while` em `algora`.
-> 2. **Unidade 7, parte 1/3 (≈ 1h25):** problema e decisão de design (dados compostos: dois caminhos), especificação informal e formal de **tipos algébricos** e de **casamento de padrões** (`match`), e discussão.
->
-> **Nota metodológica.** Os tipos algébricos serão especificados como **`aljabr` v4**: um **ramo paralelo** que parte de `aljabr` v3 (a última versão puramente funcional) e **não** passa por `algora`. A linha de `algora` segue o outro caminho de design: a Aula 18 a estende com **classes e objetos**. Assim, o curso passa a ter **duas linguagens concretas** para comparar, e ambos os caminhos merecem estudo.
->
-> ```text
-> aljabr v3 ──┬──> aljabr v4   (+ tipos algébricos, `match`)      [hoje: especificação]
->             └──> algora      (+ estado, comandos, `while`) ──> algora com objetos   [Aulas 18–19]
-> ```
->
-> As demonstrações de uso são em **Python** (`dataclass` + `match`), que vocês já conhecem.
-
----
-
-## Antes da aula (checklist)
-
-- [ ] **Existe implementação de `aljabr` v4?** Se sim, usá-la como demonstração ao vivo no Bloco 4. Se não, a aula fica só na especificação, e a implementação vira **tarefa prática** (mapa e testes no final deste arquivo).
-- [ ] Rodar os exemplos Python com Python ≥ 3.10 (`match`); `assert_never` exige ≥ 3.11. Confirmar a versão na máquina da aula.
-- [ ] Conferir se a AST do interpretador de `aljabr` já usa `dataclass`es (recomendado na Aula 14) e quais são os nomes dos nós. Os exemplos usam `Num`, `Add`, `Mul`.
-- [ ] Rodar o exemplo do `while` (Bloco 0) na implementação de `algora` v2.
-- [ ] **Cuidado de vocabulário:** em inglês, *ADT* significa tanto *algebraic data type* (hoje) quanto *abstract data type* (TAD, de Estruturas de Dados). São conceitos diferentes, e o segundo está na família do encapsulamento (Aula 19). Dizer sempre **"tipos algébricos"** e avisar a turma.
-
-## Roteiro de tempo (≈ 1h37 + margem)
-
-| Bloco | Conteúdo | Ciclo | Tempo |
-|-------|----------|-------|-------|
-| 0 | Fecho da Aula 16: `while` em `algora` | — | 12 min |
-| 1 | O limite dos dados; dois caminhos de design | problema + design | 10 min |
-| 2 | A álgebra dos tipos: produto, soma e recursão | espec. informal | 15 min |
-| 3 | `match` explicado passo a passo | espec. informal | 20 min |
-| 4 | Especificação formal de `aljabr` v4 | espec. formal | 15 min |
-| 5 | Discussão: Python, armadilhas, linguagens reais, relação com OO | discussão | 20 min |
-| 6 | Tabela de síntese e ponte para a Aula 18 | — | 5 min |
-
-Margem para perguntas: ≈ 20 min. Se apertar, corte nesta ordem: derivação do Bloco 4.4, exemplo da lista no Bloco 2, menção a Rust no Bloco 5.
-
----
-
 ## Bloco 0 — Fecho da Aula 16: o comando `while` (≈ 12 min)
 
 **Gancho.** Na Aula 14 (§8), `enquanto (i < 10) corpo` não fazia sentido em `aljabr`: sem mudança de estado, `i < 10` sempre vale o mesmo. Agora há *store*: avaliar `i < 10` duas vezes pode dar resultados diferentes. Reavaliar uma expressão deixou de ser desperdício e passou a ser **o que faz o programa progredir**.
@@ -118,7 +78,6 @@ soma                     // 10
 
 Cada linha é uma aplicação de (WhileVerd); a última é (WhileFalso).
 
----
 
 ## Bloco 1 — Problema e decisão de design (≈ 10 min)
 
@@ -154,7 +113,6 @@ Há (pelo menos) duas respostas clássicas, e **ambas são legítimas**. O curso
 
 > **Ressalva honesta:** `aljabr` v4 e `algora` diferem em **mais** do que a modelagem de dados (`algora` tem estado e comandos, `aljabr` v4 não). A comparação que faremos é sobre **como cada caminho organiza dados e operações**, e não sobre as linguagens inteiras.
 
----
 
 ## Bloco 2 — A álgebra dos tipos (≈ 15 min)
 
@@ -201,7 +159,6 @@ $$
 >
 > **Conexão com `aljabr`:** os booleans da Aula 12 (`true = fn (a, b) => a`) eram dados **codificados** como funções. Em `aljabr` v4, `Cons(1, Vazia)` será um dado nativo.
 
----
 
 ## Bloco 3 — `match`, passo a passo (≈ 20 min)
 
@@ -286,7 +243,6 @@ Depois: avalia-se o corpo do ramo 2, `avalia(a) + avalia(b)`, com `a` e `b` vinc
 >
 > **3. Quais nomes existem depois do `match`?** *(Em Python, as variáveis do padrão são variáveis comuns da função e continuam existindo depois do `match`. Em `aljabr` v4 (regra Match), existem só no corpo do ramo, como num `let`. É uma diferença de design; ver Bloco 5.)*
 
----
 
 ## Bloco 4 — Especificação formal de `aljabr` v4 (≈ 15 min)
 
@@ -461,7 +417,6 @@ Para $\Delta = \{\texttt{Num}/1, \texttt{Add}/2, \texttt{Mul}/2\}$ e `match Add(
 
 Sem store, sem localizações novas: a derivação cabe em meia tela. Comparar com a derivação de `let` da Aula 8.
 
----
 
 ## Bloco 5 — Discussão (≈ 20 min)
 
@@ -565,7 +520,6 @@ Vocês já conhecem OO, e é natural a pergunta: *"isso não é só OO com outro
 
 **Mais uma ressalva de vocabulário:** *tipo abstrato de dados* (TAD) é outra coisa, e está do lado dos **objetos**: esconde a representação atrás de uma interface (Aula 19).
 
----
 
 ## Bloco 6 — Tabela de síntese e ponte (≈ 5 min)
 
@@ -583,7 +537,6 @@ Observe: `aljabr` v4 e `algora` partem da **mesma** v3 e variam **independenteme
 
 `algora` seguirá o Caminho 2: **classes e objetos**, aproveitando o store e os ambientes da Unidade 5. Dizer, ao final, que `aljabr` v4 volta como **referência de comparação** nas Aulas 18 e 19 (mesma AST, escrita nas duas linguagens).
 
----
 
 ## Tarefa prática (opcional): implementar `aljabr` v4
 
@@ -618,7 +571,6 @@ Conjunto de testes:
 
 E os programas abaixo devem ser **rejeitados pelo parser**: `Num()`, `match x { }`, `match x { Add(a, a) => a }`, `type T = A \| A`, `type T = vazia`, `let _ = 1 in 2`.
 
----
 
 ## Exercícios de fixação (sem entrega)
 
