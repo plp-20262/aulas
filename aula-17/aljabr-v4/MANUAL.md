@@ -127,6 +127,42 @@ Cada execução do interpretador processa **uma única expressão** (o arquivo
 ou a entrada padrão inteira é lida como um programa). Exemplos de programas
 prontos estão no diretório `exemplos/`.
 
+### Impressão simplificada (`-p` / `--pretty-print`)
+
+Por padrão, o interpretador imprime o valor resultante na representação
+interna do Python (por exemplo, `Tagged(tag='Cons', args=(1, ...))` para
+valores etiquetados de `aljabr` v4).
+
+Com a flag `-p` (ou `--pretty-print`), os valores etiquetados são impressos
+de forma simplificada, como construtores:
+
+```bash
+python3 aljabr.py -p exemplos/arvore-lista.al
+```
+
+```
+-->  Cons(1, Cons(2, Cons(3, L_)))
+```
+
+Sem a flag, o mesmo programa imprime:
+
+```bash
+python3 aljabr.py exemplos/arvore-lista.al
+```
+
+```
+-->  Tagged(tag='Cons', args=(1, Tagged(tag='Cons', args=(2, ...))))
+```
+
+Erros e fechamentos também recebem uma representação simplificada com `-p`:
+
+- `Erro(msg='RUNTIME: divisão por zero')` → `Erro(RUNTIME: divisão por zero)`
+- `Closure(...)` → `<funcao>`
+
+Essa flag afeta **apenas a exibição** do resultado; a avaliação e a semântica
+da linguagem são exatamente as mesmas.
+
+
 
 ## 3. Conjunto de testes
 
