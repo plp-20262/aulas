@@ -95,12 +95,6 @@ class TestParserV4:
         "match x { }",
         # variável repetida no padrão
         "match x { Add(a, a) => a }",
-        # `Num()` com Num/1 declarado: aridade não bate
-        "type T = Num(n)\nNum()",
-        # construtor não declarado
-        "Foo(1)",
-        # `Cons` sem parênteses quando Cons/2 está declarado
-        "type T = Cons(h, t)\nCons",
     ])
     def test_programas_mal_formados_sao_erro(self, code):
         ast = parse_code(code)

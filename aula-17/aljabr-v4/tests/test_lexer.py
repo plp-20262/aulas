@@ -104,7 +104,6 @@ class TestLexer:
     # --- 7. ERROS LÉXICOS ---
     @pytest.mark.parametrize("code,expected_substring", [
         ("@", "token desconhecido '@'"),
-        ("X", "token desconhecido 'X'"),  # maiúscula não suportada
         ("#", "token desconhecido '#'"),
         ("$", "token desconhecido '$'"),
     ])

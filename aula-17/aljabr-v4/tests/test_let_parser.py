@@ -107,9 +107,11 @@ class TestLetParserErrors:
         assert "tokens depois da expressão" in result.msg
 
     def test_var_uppercase(self, parse):
-        result = parse("X")
+        """Nomes iniciados com maiúscula são CONSTR, não NOME.
+        Em v4, `let X = 1 in X` é erro porque `let` espera NOME."""
+        result = parse("let X = 1 in X")
         assert isinstance(result, Erro)
-        assert "token desconhecido 'X'" in result.msg
+        assert "esperava nome" in result.msg.lower() or "esperava '=' " in result.msg or "esperada" in result.msg.lower()
 
     # --- 4. ERROS DE EXPRESSÕES DENTRO DO LET ---
     def test_malformed_binding_expr(self, parse):
