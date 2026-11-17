@@ -32,6 +32,14 @@ class TokenType(Enum):
     ELSE = auto()
     EQEQ = auto()
     LT = auto()
+    # aljabr v4 (§1): novas categorias léxicas para tipos algébricos e match
+    CONSTR = auto()   # construtores e nomes de tipos (letra maiúscula)
+    PIPE = auto()     # |
+    LBRACE = auto()   # {
+    RBRACE = auto()   # }
+    TYPE = auto()     # palavra reservada `type`
+    MATCH = auto()    # palavra reservada `match`
+    UNDERSCORE = auto()  # palavra reservada `_`
 
 @dataclass(frozen=True)
 class Token:
@@ -88,6 +96,15 @@ THEN      = match_type(TokenType.THEN)
 ELSE      = match_type(TokenType.ELSE)
 EQEQ      = match_type(TokenType.EQEQ)
 LT        = match_type(TokenType.LT)
+
+# aljabr v4 (§1): predicados das novas categorias
+CONSTR   = match_type(TokenType.CONSTR)
+PIPE     = match_type(TokenType.PIPE)
+LBRACE   = match_type(TokenType.LBRACE)
+RBRACE   = match_type(TokenType.RBRACE)
+TYPE     = match_type(TokenType.TYPE)
+MATCH    = match_type(TokenType.MATCH)
+UNDERSCORE = match_type(TokenType.UNDERSCORE)
 
 # Predicados para grupos de operadores
 OPERADOR = match_type(

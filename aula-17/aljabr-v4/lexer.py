@@ -12,6 +12,10 @@ RESERVADAS = {
     "if": TokenType.IF,
     "then": TokenType.THEN,
     "else": TokenType.ELSE,
+    # aljabr v4 (§1): três novas palavras reservadas para tipos algébricos e match
+    "type": TokenType.TYPE,
+    "match": TokenType.MATCH,
+    "_": TokenType.UNDERSCORE,
 }
 
 # Mapeamento de regras léxicas (Ordem prioritária)
@@ -44,6 +48,16 @@ TOKEN_SPEC = [
     ("EQUAL",    r"="),
     # aljabr v3 (§1): LT (`<`)
     ("LT",       r"<"),
+    # aljabr v4 (§1): construtores e nomes de tipos (letra maiúscula).
+    # Colocado antes de NOME para deixar explícita a precedência léxica:
+    # `Num` é CONSTR, `num` é NOME. Não há conflito real de padrões
+    # (diferenciam por maiúscula/minúscula no primeiro caractere), mas a
+    # ordem torna a intenção clara para o estudante.
+    ("CONSTR",   r"[A-Z][A-Za-z0-9_]*"),
+    # aljabr v4 (§1): pipe, chaves — usados em declarações de tipo e match
+    ("PIPE",     r"\|"),
+    ("LBRACE",   r"\{"),
+    ("RBRACE",   r"\}"),
     # aljabr v2 (§1): COMMA — separa os itens de params e de args
     ("COMMA",    r","),
     ("INTEIRO",  r"\d+"),
