@@ -1,9 +1,29 @@
 import sys
+import re
 import argparse
 from dataclasses import dataclass
 from tipos import Ast, Erro, monadic_error, Token, TokenType
 from lexer import tokenizador
 from parser import parser, parse_programa
+
+def remover_comentarios(code: str) -> str:
+    """Remove comentários do código-fonte.
+
+    Todo o conteúdo de uma linha a partir do primeiro ``#`` é ignorado,
+    permitindo comentários de fim de linha (inline) e de linha inteira.
+    A quebra de linha de cada linha é preservada, de modo que o espaçamento
+    entre linhas do código original é mantido e nenhum elemento core da
+    linguagem (lexer, parser, eval) é afetado.
+    """
+    linhas = code.split("\n")
+    resultado = []
+    for linha in linhas:
+        idx = linha.find("#")
+        if idx != -1:
+            linha = linha[:idx]
+        resultado.append(linha)
+    return "\n".join(resultado).strip()
+
 
 # tabela de operações da linguagem
 OPERACAO = {
@@ -366,6 +386,10 @@ def main():
     else:
         programa = sys.stdin.read()
 
+    # limpa código
+    programa = remover_comentarios(programa)
+    programa = re.sub(r'\n{2,}', '\n\n', programa)
+
     tokens = tokenizador(programa)
     if isinstance(tokens, Erro):
         print(f"{programa}")
@@ -384,7 +408,7 @@ def main():
     env: Environment = {}
     significado = eval(ast, env, delta)
 
-    print(f"{programa}")
+    print(f"{programa}\n")
     if args.pretty_print:
         # Apenas apresentação: formata Tagged de forma legível
         print(f"-->  {formatar_valor(significado)}")

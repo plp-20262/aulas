@@ -1,9 +1,11 @@
+# define o tipo Lista com variantes: Vazia/0 e Cons/2
 type Lista = Vazia | Cons(cabeca, cauda)
 
+# define a função recursiva len(lista)
 letrec len = fn (lista) =>
-  match lista {
-    Vazia       => 0
-    Cons(_, r)  => 1 + len(r)
+  match lista {                 # se lista … 
+    Vazia       => 0            # … casa com Vazia
+    Cons(_, r)  => 1 + len(r)   # … casa com Cons
   }
 in 
 

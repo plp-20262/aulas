@@ -74,7 +74,11 @@ def run(code: str):
 
     Passa o conjunto de construtores declarados (delta) para o avaliador,
     necessário para validar construções de valores etiquetados (v4).
+
+    Aplica remoção de comentários (#) antes da tokenização (aljabr v4).
     """
+    from aljabr import remover_comentarios
+    code = remover_comentarios(code)
     tokens = tokenizador(code)
     if isinstance(tokens, Erro):
         return tokens

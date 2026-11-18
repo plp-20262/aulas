@@ -356,7 +356,33 @@ A ordem dos ramos importa: se `_ => e` viesse primeiro, ele casaria com tudo
 e nenhuma das regras de simplificação seria aplicada.
 
 
-## 6. Diferenças da versão v3 para a v4
+## 6. Comentários
+
+O interpretador de `aljabr` suporta comentários, mas isso **não é parte do core
+da linguagem**: léxico, parser e avaliador (`eval`) não enxergam o caractere
+`#` de forma alguma.
+
+Os comentários são removidos por um **pré-processamento** executado antes do
+programa chegar ao lexer. Toda o conteúdo de uma linha a partir do primeiro
+`#` é ignorado, o que permite tanto comentários de linha inteira quanto
+comentários inline (código antes do `#`, comentário depois):
+
+```aljabr
+# isso é um comentário de linha inteira
+let x = 1 # atribui 1   # comentário inline
+in x                    # expressão final
+```
+
+Como a remoção é feita antes da tokenização:
+
+- nada sobre comentários aparece na especificação formal do core (léxico,
+  sintaxe e semântica em `README.md`);
+- nenhum elemento core da linguagem (`lexer.py`, `parser.py`, `eval`) é
+  afetado de qualquer forma;
+- o símbolo `#` não tem nenhum outro uso na linguagem (não há strings nem
+  operações que usem `#`).
+
+## 7. Diferenças da versão v3 para a v4
 
 1. Novas palavras reservadas: `type`, `match` e `_`.
 2. Novas categorias léxicas: `CONSTR` (construtores/nomes de tipos), `PIPE`
@@ -376,7 +402,7 @@ O poder computacional da v3 já era Turing equivalente; a v4 adiciona
 conveniência para modelar dados compostos e desestruturá-los de forma direta.
 
 
-## 7. Diferenças da versão v2 para a v3 (resumo)
+## 8. Diferenças da versão v2 para a v3 (resumo)
 
 1. Novas palavras reservadas: `letrec`, `if`, `then`, `else`.
 2. Novos operadores: `==` (igualdade) e `<` (menor que), no novo nível
@@ -389,7 +415,7 @@ conveniência para modelar dados compostos e desestruturá-los de forma direta.
 6. O corpo aditivo da v2 (`termo { (+|-) termo }`) foi renomeado para `soma`.
 
 
-## 8. Erros
+## 9. Erros
 
 Quando algo dá errado, a avaliação inteira termina em **erro**. Os casos
 possíveis são:
@@ -408,7 +434,7 @@ Todos esses erros são propagados estritamente: `let x = 1/0 in 5` vale
 `erro`, e não `5`.
 
 
-## 9. Referência rápida
+## 10. Referência rápida
 
 | Construção | Forma | Tipo |
 |------------|-------|------|
