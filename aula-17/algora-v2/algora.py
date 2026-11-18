@@ -1,3 +1,4 @@
+import re
 import sys
 from dataclasses import dataclass
 from lexer import tokenizador
@@ -182,8 +183,30 @@ def eval_expr(expr: Expr, env: dict[str, int], store: dict[int, Val]) -> Val:
                     return err
             return eval_expr(final_expr, block_env, store)
 
+def remover_comentarios(code: str) -> str:
+    """Remove comentários do código-fonte.
+
+    Todo o conteúdo de uma linha a partir do primeiro ``#`` é ignorado,
+    permitindo comentários de fim de linha (inline) e de linha inteira.
+    A quebra de linha de cada linha é preservada, de modo que o espaçamento
+    entre linhas do código original é mantido e nenhum elemento core da
+    linguagem (lexer, parser, eval) é afetado.
+    """
+    linhas = code.split("\n")
+    resultado = []
+    for linha in linhas:
+        idx = linha.find("#")
+        if idx != -1:
+            linha = linha[:idx]
+        resultado.append(linha)
+    return "\n".join(resultado).strip()
+
+
 @monadic_error
 def executar_programa(programa: str, env: dict[str, int], store: dict[int, Val]) -> Val:
+    # limpa código: remove comentários e colapsa múltiplas newlines
+    programa = remover_comentarios(programa)
+    programa = re.sub(r"\n{2,}", "\n\n", programa)
     tokens = tokenizador(programa)
     ast = parser(tokens)
     return eval_expr(ast, env, store)
