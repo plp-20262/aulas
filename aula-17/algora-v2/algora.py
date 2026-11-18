@@ -205,8 +205,6 @@ def remover_comentarios(code: str) -> str:
 @monadic_error
 def executar_programa(programa: str, env: dict[str, int], store: dict[int, Val]) -> Val:
     # limpa código: remove comentários e colapsa múltiplas newlines
-    programa = remover_comentarios(programa)
-    programa = re.sub(r"\n{2,}", "\n\n", programa)
     tokens = tokenizador(programa)
     ast = parser(tokens)
     return eval_expr(ast, env, store)
@@ -216,6 +214,12 @@ def main():
         programa = open(sys.argv[1]).read().strip()
     else:
         programa = sys.stdin.read()
+
+    # limpa o código
+    programa = remover_comentarios(programa)
+    programa = re.sub(r"\n{2,}", "\n\n", programa)
+
+    # executa
     resultado = executar_programa(programa, {}, {})
     print(f"{programa}\n")
     print(f"--> {resultado}")

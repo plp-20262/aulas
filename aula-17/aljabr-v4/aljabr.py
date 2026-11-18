@@ -22,7 +22,7 @@ def remover_comentarios(code: str) -> str:
         if idx != -1:
             linha = linha[:idx]
         resultado.append(linha)
-    return "\n".join(resultado).strip()
+    return "\n".join(resultado)
 
 
 # tabela de operações da linguagem
@@ -387,7 +387,7 @@ def main():
         programa = sys.stdin.read()
 
     # limpa código
-    programa = remover_comentarios(programa)
+    programa = remover_comentarios(programa).strip()
     programa = re.sub(r'\n{2,}', '\n\n', programa)
 
     tokens = tokenizador(programa)
