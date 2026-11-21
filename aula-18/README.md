@@ -1,16 +1,25 @@
 # Aula 18 — 18/nov — Unidade 7 (2/3): objetos em `algora`
 
-> Antes do início desta aula, revisei a abordaem chamada Tipos
+Esta aula é sobre a abordagem que conhecemos como Orientação a
+Objetos (OO). O objetivo da aula é demonstrar como a OO pode ser
+vista como consequência direta da presença de closures, mutação e
+o suporte a registros (_records_) nas linguagens de programação.
+
+> Antes do início da aula, revisei a abordaem chamada Tipos
 > Algébricos (TADs) de Dados que é mais comum em linguagens
 > funcionais, para suporte à modelagem de dados compostos. Por
 > esse motivo, a implementação de TADs demonstrada foi com a
 > linguagem Aljabr v4 deixada no diretório da Aula 17.
 
-
-Esta aula é sobre a abordagem que conhecemos como Orientação a
-Objetos (OO). O objetivo da aula é demonstrar como a OO pode ser
-vista como consequência direta da presença de closures, mutação e
-o suporte a registros (_records_) nas linguagens de programação.
+> IMPORTANTE: como comentei em sala de aula, desta vez pedi aos agentes de IA
+> que criassem toda a especificação formal a partir de minha especificação
+> informal. Como as especificações semânticas ficaram ligeiramente diferente,
+> pela primeira vez, os agentes de IA produziram implementações diferentes
+> entre si. Deixei ambas as implementações aqui: `algora-v3-vds` (a
+> especificação e implementação do DeepSeek) e `algora-v3-vcl` (do Claude).
+> Pessoalmente, prefiro a versão do DeepSeek, mas ainda preciso investigar as
+> diferenças mais a fundo. Os exemplos usados na aula (no diretório
+> `exemplos/`) funcionam direito em ambas as implementações, por sinal.
 
 ## Progressão de Algora v2 até Algora v2 com suporte a OO
 
@@ -75,11 +84,6 @@ ir além.
 ### Passo 2 — dispatcher de closures
 
 ```
-var inc := 0;
-var dec := 1;
-var get := 2;
-var ERRO := fn () { 1/0 };
-
 def Contador() {
     var n := 0;
 
@@ -96,14 +100,15 @@ def Contador() {
 }
 ```
 
-Nesta versão introduzimos um nível a mais de indireção. Na versão
-anterior de Contador, o objeto retornado era o próprio objeto e
-único método. Nesta, Contador retorna um closure intermediário
-que implementa um padrão conhecido como _dispatcher_. Trata-se de
-uma função de alta ordem que retornará uma outra função/closure.
-Leia o código do closure retornado por Contador(): é uma função
-que "seleciona" um dos closures definidos anteriormente, a partir
-da "mensagem". E esse outro closure selecionado é o "método"
+Nesta versão acima (que está incompleta, pra mantê-la legível aqui; mas
+está completa no diretório exemplos) introduzimos um nível a mais de
+indireção. Na versão anterior de Contador, o closure retornado podia ser
+visto ele próprio como o objeto e seu único método. Nesta, `Contador()`
+retorna um closure intermediário que implementa um padrão conhecido como
+_dispatcher_. Trata-se de uma função de alta ordem que retornará uma
+outra função/closure. Leia o código do closure retornado por Contador():
+é uma função que "seleciona" um dos closures definidos anteriormente, a
+partir da "mensagem". E esse outro closure selecionado é o "método"
 propriamente dito.
 
 ```
@@ -259,8 +264,10 @@ novo nome).
    - objetos/registros com notação JS: `{ campo : expr, … }`
    - acesso a campos: `obj.campo`
    - mutação de campos: `obj.campo := expr`
-   - como closures são dados (funções são cidadãs de 1a classe):
-     - métodos como campos ligados a closures: `obj.metodo := fn (…) { … }`
+   - como closures são dados (e funções são cidadãs de 1a classe):
+     - campos públicos do objeto são valores ligados aos campos pelo construtor
+     - métodos são campos públicos cujos dados são closures: `obj.metodo := fn (…) { … };`
+   - dados privados são variáveis dentro dos closures: `var variavel := valor;`
    - graças a escopo léxico, métodos têm acesso privilegiado ao objeto
 
 
@@ -269,47 +276,9 @@ novo nome).
 - reapresentar e revisar a tabela de síntese
 - incluir suporte a modelagem de dados compostos
 
+## Uma leitura clássica recomendada
 
-# Aspectos de que abri mão nesta aula em relação ao plano original
+Para aqueles que queiram se aprofundar, o artigo científico abaixo é
+considerado um clássico visto nesta aula.
 
-1. a classe como molde: acho que o modelo que apresentei faz mais
-   sentido do ponto de vista de PLP; de fato, do ponto de vista da
-   atividade de programar, ver "classes como moldes" faz sentido; do
-   ponto de vista de Paradigmas de Linguagens de Programação, contudo,
-   me parece mais apropriado que o aluno entenda como vários conceitos
-   se agregam para formar as ideias que embasam a orientação a objetos;
-
-2. aliasing: embora não tenha retomado e reforçado o conceito de
-   aliasing nesta aula, o essencial foi dito: objetos têm identidade;
-   além disso, na demo, o aliasing for mostrado explicitamente;
-
-3. `this` (de Java e de JavaScript) e `self` (de Python) merecem uma atenção
-   esppecial na retomada da Aula 19; vale a pena demonstrar como
-   programas semelantes em Algora, Java e Python têm diferentes
-   semânticas no mesmo tema;
-
-4. faltou demonstrar como escrever com OO o tipo composto AST que foi
-   demonstrado com tipos algébricos; outro tópico deixado para a
-   retomada do assunto na Aula 19;
-
-5. na retomada do assunto na Aula 19, reforçar os aspectos relevantes:
-   a modelagem de dados compostos com OO permite agrupar estado,
-   operações e identidade;
-
-6. de fato, desisti de apresentar o assunto com uma LP baseada em
-   classes; acho que o conceito central mais importante são objetos com
-   identidade, estado próprio e, portanto, suporte à mutação; interação
-   baseada em mensagens (chamadas de métodos), encapsulamento de dados e
-   acesso restrito via métodos (closures). Com isso, o conceito de
-   classe como molde perde importância e pode ser percebido como uma
-   mera evolução conceitual da função construtora de objetos da natureza
-   escolhida (uma forma de promover a função de mera construtora de
-   objetos em uma especificação do "molde" dos objetos daquela
-   classe; e a promoção da invocação da função construtora em processo
-   de instanciação).
-
-7. apesar disso, decidi manter o termo "classe" para explorar a
-   familiaridade prévia dos alunos com o assunto; mas, sempre chamando a
-   atenção para o fato de que a LP não tem classes; que classe é
-   meramente um _design pattern_ que a LP suporta e que é a base para classes
-   em LPs OO clássicas;
+- REDDY, Uday S., Objects as Closures: Abstract Semantics of Object Oriented Languages, 1988
