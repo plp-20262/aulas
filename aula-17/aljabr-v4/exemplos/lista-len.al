@@ -9,5 +9,6 @@ letrec len = fn (lista) =>
   }
 in 
 
-let lista = Cons(50, Cons(10, Cons(30, Cons(0, Cons(20, Vazia))))) in
+let outra = Cons(50, Cons(10, Cons(30, Cons(0, Cons(20, Vazia))))) in
+let lista = Cons(50, Cons(10, Cons(30, Cons(0, Cons(20, outra))))) in
 len(lista)

@@ -4,17 +4,17 @@ type Lista = Vazia | No(cabeca, cauda)
 # define erro como uma função que produz erro (se invocada)
 let erro = fn () => 1/0 in
 
-# define nth(lista, n) que retorna n-ésimo elemento da lista (ou produz erro)
-letrec nth = fn (lista, n) =>
+# define nth(lista, i) que retorna i-ésimo elemento da lista (ou produz erro)
+letrec nth = fn (lista, i) =>
   match lista {
     Vazia => erro()
     No(cabeca, cauda) =>
-      if n < 0
+      if i < 0
         then erro()
-      else if n == 0
+      else if i == 0
         then cabeca
       else
-        nth(cauda, n - 1)
+        nth(cauda, i - 1)
   }
 in
 

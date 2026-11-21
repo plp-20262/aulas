@@ -15,4 +15,4 @@ let simplifica = fn (expr) =>
 
     _                => expr
   }
-in simplifica(Mul(Num(7), Num(0)))
+in simplifica(Add(Num(7), Num(0)))
