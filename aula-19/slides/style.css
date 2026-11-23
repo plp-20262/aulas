@@ -1,0 +1,350 @@
+/* Estilo dos slides (reveal.js 5 + pandoc), no visual dos slides
+   do curso de Clojure:
+   slide branco com sombra sobre fundo cinza-bege; títulos em
+   Yanone Kaffeesatz, texto em Droid Serif, código em Ubuntu Mono. */
+
+@import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
+@import url(https://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
+@import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+
+/* "html:root" tem mais especificidade que o ":root" do tema. */
+html:root {
+  --blue: #5858d1;
+  --page-bg: #dcdcd6;
+  --r-background-color: #dcdcd6;
+  --r-main-font: "Droid Serif", "Noto Serif", Georgia, serif;
+  --r-heading-font: "Yanone Kaffeesatz", "Arial Narrow", sans-serif;
+  --r-code-font: "Ubuntu Mono", ui-monospace, Menlo, Consolas, monospace;
+  --r-main-font-size: 32px;
+  --r-main-color: #111;
+  --r-heading-color: #111;
+  --r-heading-font-weight: normal;
+  --r-heading-text-transform: none;
+  --r-heading-letter-spacing: 0;
+  --r-link-color: var(--blue);
+  --r-link-color-hover: #3a3ab0;
+  --r-selection-background-color: #ccddff;
+
+  /* Paleta dos slides especiais */
+  --section-bg: #293653;
+  --concept-bg: #f0f3ff;
+  --concept-accent: #5858d1;
+  --example-bg: #f1f6f0;
+  --example-accent: #52836a;
+  --warning-bg: #fff5e9;
+  --warning-accent: #c88a43;
+}
+
+/* ------------------------------------------------------------
+   Página e estrutura geral
+   ------------------------------------------------------------ */
+
+/* Página cinza; o slide é uma folha branca com sombra */
+body, .reveal-viewport {
+  background: var(--page-bg);
+}
+
+.reveal .slides {
+  background: var(--active-slide-bg, #fff);
+  box-shadow: 0 0 18px rgba(0, 0, 0, .35);
+  text-align: left;
+}
+
+.reveal {
+  line-height: 1.6;
+}
+
+/* Respiro interno do slide */
+.reveal .slides section {
+  box-sizing: border-box;
+  padding: 0.8em 2.5em;
+}
+
+/* ------------------------------------------------------------
+   Títulos e texto
+   ------------------------------------------------------------ */
+
+.reveal h1,
+.reveal h2,
+.reveal h3 {
+  line-height: 1.1;
+}
+.reveal h3 {
+  padding-top: 1em;
+}
+
+.reveal h2 {
+  font-size: 2.3em;
+  margin: 0.5em 0 0.5em;
+}
+
+.reveal ul,
+.reveal ol {
+  display: block;
+  margin-left: 1em;
+  line-height: 1.6;
+}
+
+.reveal li {
+  margin: 0.1em 0;
+}
+
+/* ------------------------------------------------------------
+   Código
+   ------------------------------------------------------------ */
+
+.reveal code {
+  font-family: var(--r-code-font);
+  font-weight: bold;
+  font-size: 1em;
+}
+
+.reveal pre {
+  width: 100%;
+  margin: 0.5em 0;
+  box-shadow: none;
+  font-size: 1em;
+  line-height: 1.35;
+  background: #f4f4f2;
+  border-radius: 4px;
+}
+
+.reveal pre code {
+  max-height: none;
+  padding: 0.7em 0.9em;
+  background: transparent;
+  font-weight: normal;
+}
+
+/* Código em headings: mesma fonte dos títulos */
+.reveal :is(h1, h2, h3, h4, h5, h6) code {
+  font-family: inherit;
+  font-size: 1em;
+  font-weight: 600;
+  color: #b84a32;
+}
+
+/* ------------------------------------------------------------
+   Tabelas
+   ------------------------------------------------------------ */
+
+.reveal table {
+  font-size: 0.9em;
+  border-collapse: collapse;
+  margin: 0.6em 0;
+}
+
+.reveal table th,
+.reveal table td {
+  padding: 0.3em 0.8em;
+  border: none;
+  border-bottom: 1px solid #ddd;
+}
+
+.reveal table th {
+  border-bottom: 2px solid #999;
+}
+
+/* ------------------------------------------------------------
+   Colunas (pandoc)
+   ------------------------------------------------------------ */
+
+.reveal .columns {
+  display: flex;
+  gap: 1.5em;
+}
+
+.reveal .column {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* ------------------------------------------------------------
+   Slides densos
+   ------------------------------------------------------------ */
+
+.reveal section.small {
+  --code-scale: 0.58;
+  --table-scale: 0.58;
+  --column-scale: 0.9;
+}
+
+.reveal section.small pre {
+  font-size: calc(1em * var(--code-scale));
+}
+
+.reveal section.small table {
+  font-size: calc(1em * var(--table-scale));
+}
+
+.reveal section.small .column {
+  font-size: calc(1em * var(--column-scale));
+}
+
+/* ------------------------------------------------------------
+   Número do slide
+   ------------------------------------------------------------ */
+
+.reveal .slide-number {
+  font-family: var(--r-main-font);
+  font-size: 22px;
+  color: #777;
+  background: transparent;
+}
+
+/* ------------------------------------------------------------
+   Página de título
+   ------------------------------------------------------------ */
+
+.reveal .slides section#title-slide {
+  display: flex !important;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  height: 100%;
+  padding: 2em;
+  background-color:  #293653;
+  color: white;
+}
+
+.reveal #title-slide .title {
+  font-family: var(--r-heading-font);
+  font-size: 3.5em;
+  line-height: 1.1;
+  margin: 0 0 0.3em;
+  color: white;
+}
+
+.reveal #title-slide .subtitle {
+  font-size: 1.3em;
+  margin: 0 0 2em;
+}
+
+.reveal #title-slide .author {
+  font-size: 1em;
+  margin: 0;
+}
+
+.reveal #title-slide .date {
+  font-size: 0.8em;
+  margin: 0.3em 0 0;
+}
+
+/* ============================================================
+   ESTILOS SEMÂNTICOS DE SLIDES
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   Fundos dos slides especiais
+
+   Aplicamos o fundo à área .slides, preservando o posicionamento
+   controlado pelo Reveal.js.
+
+   Os seletores abaixo consideram slides horizontais, isto é,
+   sections diretamente dentro de .slides.
+   ------------------------------------------------------------ */
+
+.reveal .slides:has(> section.present.section) {
+  --active-slide-bg: var(--section-bg);
+}
+
+.reveal .slides:has(> section.present.concept) {
+  --active-slide-bg: var(--concept-bg);
+  --active-cue-color: var(--concept-accent);
+}
+
+.reveal .slides:has(> section.present.example) {
+  --active-slide-bg: var(--example-bg);
+  --active-cue-color: var(--example-accent);
+}
+
+.reveal .slides:has(> section.present.warning) {
+  --active-slide-bg: var(--warning-bg);
+  --active-cue-color: var(--warning-accent);
+}
+
+/* ------------------------------------------------------------
+   Barra lateral
+
+   A barra é desenhada sobre a área .slides, sem modificar
+   seu position, suas dimensões ou as coordenadas dos slides.
+   ------------------------------------------------------------ */
+
+.reveal .slides:has(
+  > section.present:is(.concept, .example, .warning)
+)::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 12px;
+  background: var(--active-cue-color);
+  pointer-events: none;
+}
+
+/* ------------------------------------------------------------
+   Divisor de seção (.section)
+   ------------------------------------------------------------ */
+
+.reveal .slides > section.section {
+  display: flex !important;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  height: 100%;
+  color: #fff;
+}
+
+.reveal section.section h2 {
+  color: #fff;
+  font-size: 3em;
+  margin: 0 0 0.4em;
+}
+
+.reveal section.section p {
+  color: #e0e5f0;
+  font-size: 1.15em;
+  margin: 0.2em 0;
+}
+
+.reveal section.section code {
+  color: #fff;
+}
+
+/* ------------------------------------------------------------
+   Títulos dos slides com indicadores visuais
+   ------------------------------------------------------------ */
+
+.reveal section.concept h2 {
+  color: #293653;
+}
+
+.reveal section.example h2 {
+  color: #365b49;
+}
+
+.reveal section.warning h2 {
+  color: #85511f;
+}
+
+
+/* Destaques no texto */
+.reveal .highlight {
+    color: var(--blue);
+    font-weight: bold;
+}
+
+.reveal .red {
+    color: #b84a32;
+}
+
+.reveal .green {
+    color: #52836a;
+}
+
+.reveal .muted {
+    color: #777;
+}

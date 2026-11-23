@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="pandoc">
+  <meta name="author" content="Dalton Serey">
+  <title>Aula 19 — Closures × objetos, encapsulamento e o problema da
+expressão</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+  <style>
+    .reveal .sourceCode {  /* see #7635 */
+      overflow: visible;
+    }
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/white.css" id="theme">
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+<section id="title-slide">
+  <h1 class="title">Modelagem de Dados</h1>
+  <p class="subtitle">Unidade 7 / Aula 19<br>Tipos Algébricos de Dados
+vs Orientação a Objetos</p>
+  <p class="author">Dalton Serey</p>
+  <p class="date">23 de novembro de 2026</p>
+</section>
+
+<section id="na-aula-passada" class="slide level2">
+<h2>Na aula passada…</h2>
+<p>Adicionamos <span class="highlight">OO</span> a Algora… e vimos que o
+essencial da OO foi adicionado à linguagem pela simples adição à
+modelagem de dados com <span class="highlight">registros</span>.</p>
+<div class="fragment">
+<h3 id="nesta-aula-vamos-discutir">Nesta aula vamos discutir…</h3>
+<ol type="1">
+<li>Quanto de Orientação a Objetos, de fato, adicionamos a Algora?</li>
+<li>Modelagem de dados com TAD vs com OO</li>
+</ol>
+<aside class="notes">
+<p>⏱ 2 min.</p>
+<p>Hoje não há construção nova de linguagem. Vamos usar o que já temos
+(closures, estado, records) para compreender quanto de OO temos na LP.
+Com isso, fechamos a Unidade 7 comparando os dois caminhos abertos na
+Aula 17: tipos algébricos (<code>aljabr</code> v4) e objetos
+(<code>algora</code> v3).</p>
+</aside>
+</div>
+</section>
+<section id="retomando-a-aula-18" class="slide level2">
+<h2>Retomando a Aula 18</h2>
+<p><strong>objeto</strong> = closure + estado mutável + record</p>
+<ol type="1">
+<li class="fragment"><span class="highlight">closures com escopo
+léxico</span> permite combinar variáveis e métodos;</li>
+</ol>
+<ol start="2" type="1">
+<li class="fragment"><span class="highlight">estado e mutação</span>
+permitem que os métodos atualizem as variáveis;</li>
+</ol>
+<ol start="3" type="1">
+<li class="fragment"><span class="highlight">registros</span> nos dão a
+<span class="highlight">dot notation</span> e simplificam o <span
+class="highlight">dispatch</span>.</li>
+</ol>
+<div class="fragment">
+<aside class="notes">
+<p>⏱ 2 min.</p>
+<p>Aula 18: progressão closure → dispatcher → record de closures. Hoje
+fechamos os três itens. Reforçar: não há regra de avaliação nova; tudo
+que mostrarmos decorre das regras da Aula 18 (criação de record, leitura
+e escrita de campo).</p>
+<p>Lembrete sobre os exemplos: <code>algora</code> só tem números, então
+sons de animais serão códigos (1, 2) e usaremos <code>tamanho()</code>
+no lugar de <code>mostra()</code>.</p>
+</aside>
+</div>
+</section>
+<section id="o-contador-como-objeto" class="slide level2">
+<h2>O contador como objeto</h2>
+<pre class="text"><code>def Contador() {
+    var n := 0;
+    var obj := {};
+    obj.inc := fn () { n := n + 1; n };
+    obj.get := fn () { n };
+    obj
+}
+
+var c1 := Contador();
+var c2 := Contador();
+c1.inc();
+c1.inc();
+c2.inc();
+c1.get() + c2.get()        // 3</code></pre>
+<div class="fragment">
+<p>Temos o básico da OO: <span class="highlight">identidade</span> +
+<span class="highlight">estado</span> + <span
+class="highlight">comportamento</span></p>
+<aside class="notes">
+<p>⏱ 4 min.</p>
+<p>DEMO: <code>exemplos/contador-privado.alg</code>. Mostrar também o
+alias: <code>var c3 := c1;</code> e que <code>c3.inc()</code> afeta
+<code>c1</code>.</p>
+<p>O “construtor” é só uma função: cria <code>{}</code>, equipa com
+closures, devolve.</p>
+</aside>
+</div>
+</section>
+<section id="mas-onde-está-o-estado" class="slide level2">
+<h2>Mas onde está o estado?</h2>
+<pre class="text"><code>Ambiente               Store
+
+ambiente criado no código cliente:
+c1 ─────&gt; ℓ₁ ─────&gt; registro { inc ↦ closure₁, get ↦ closure₂ }
+
+ambiente criado por Contador() (capturado pelas closures):
+n ──────&gt; ℓ₂ ─────&gt; 2</code></pre>
+<div class="fragment">
+<h3 id="o-que-objetos-acrescentam-a-closures-simples">O que objetos
+acrescentam a <em>closures</em> simples?</h3>
+<ol type="1">
+<li>permitem agrupar vários métodos com um <strong>mesmo</strong>
+estado</li>
+<li>nos dão <strong>identidade</strong> única a cada objeto (o que faria
+<code>var c3 := c1;</code>?)</li>
+<li>permitem a <strong>mutação</strong> do estado interno.</li>
+</ol>
+<aside class="notes">
+<p>⏱ 4 min.</p>
+<p>A figura é simplificada. O record guarda só os métodos;
+<code>n</code> vive em outra localização, alcançável apenas pelas
+closures. Esse detalhe é o centro da próxima seção.</p>
+<p>Resposta: nada de mecanismo novo. O método <strong>é</strong> uma
+closure (Unidade 4); a diferença está em como combinamos as construções
+que já existiam.</p>
+</aside>
+</div>
+</section>
+<section id="nossa-oo-suporta-duas-formas-de-estado"
+class="slide level2 small" style="--code-scale: 0.90">
+<h2 class="small" style="--code-scale: 0.90">Nossa OO suporta duas
+formas de estado</h2>
+<p>Campos privados (encapsulamento e <em>information hiding</em>)</p>
+<pre class="text"><code>def Contador() {
+    var n := 0;
+    var obj := {};
+    obj.inc := fn () { n := n + 1; n };
+    obj.get := fn () { n };
+    obj
+}</code></pre>
+<div class="fragment">
+<p>Campos públicos</p>
+<pre class="text"><code>def ContadorPublico() {
+    var obj := { n: 0 };
+    obj.inc := fn () { obj.n := obj.n + 1; obj.n };
+    obj.get := fn () { obj.n };
+    obj
+}</code></pre>
+<aside class="notes">
+<p>⏱ 6 min.</p>
+<p>DEMO: <code>exemplos/contador-privado.alg</code> e
+<code>contador-publico.alg</code>.</p>
+<p>A célula <code>2 (!)</code>: escrever em campo inexistente
+<strong>cria</strong> o campo (é o que fazemos com
+<code>obj.inc := ...</code> sobre <code>{}</code>), mas o campo novo não
+tem relação com a variável <code>n</code> capturada. O estado interno
+continua intacto.</p>
+</aside>
+</div>
+</section>
+<section id="de-onde-vem-a-privacidade" class="slide level2">
+<h2>De onde vem a privacidade?</h2>
+<p>Do <strong>escopo léxico</strong>.</p>
+<p>Não introduzimos <span class="highlight">nenhuma regra nova</span>: a
+variável <code>n</code> só existe no ambiente criado por
+<code>Contador()</code>, e só as closures criadas lá a capturaram.</p>
+<ul>
+<li><strong>agregação</strong>: dados e operações no mesmo lugar</li>
+<li><strong>encapsular</strong>: esconder a representação</li>
+</ul>
+<aside class="notes">
+<p>⏱ 3 min.</p>
+<p>Pergunta antes de revelar: “não há regra de campo privado em
+<code>algora</code>; de onde vem a privacidade?”</p>
+<p>Agregar não é encapsular: <code>ContadorPublico</code> agrega;
+<code>Contador</code> encapsula. Em <code>algora</code>, o programador
+escolhe entre as duas representações.</p>
+</aside>
+</section>
+<section id="invariantes" class="slide level2">
+<h2>Invariantes</h2>
+<pre class="text"><code>def Conta(inicial) {
+    var saldo := inicial;
+    var obj := {};
+    obj.deposita := fn (v) {
+        if v &lt; 0 { saldo } else { saldo := saldo + v; saldo }
+    };
+    obj.saca := fn (v) {
+        if saldo &lt; v { saldo } else { saldo := saldo - v; saldo }
+    };
+    obj.saldo := fn () { saldo };
+    obj
+}</code></pre>
+<p><strong>invariante</strong>: <code>saldo &gt;= 0</code>, para
+<strong>todo</strong> programa que usa a <code>Conta</code>.</p>
+<p>E se o saldo fosse um campo público? Se usássemos
+<code>c.saldo := -1000</code>?</p>
+<aside class="notes">
+<p>⏱ 4 min.</p>
+<p>DEMO: <code>exemplos/conta-invariante.alg</code>. Mostrar o ataque na
+versão pública.</p>
+<p>Com saldo privado, o invariante é propriedade da
+<strong>conta</strong>. Com saldo público, vira promessa de
+<strong>todos os usuários</strong> da conta.</p>
+<p>Gancho: volta no Interlúdio (Aula 28), quando formos além de nomear
+uma interface e perguntarmos como especificar o que ela promete.</p>
+</aside>
+</section>
+<section id="encapsulamento-nas-linguagens-reais" class="slide level2">
+<h2>Encapsulamento nas linguagens reais</h2>
+<table>
+<thead>
+<tr>
+<th>Linguagem</th>
+<th>Como se esconde o estado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Java</td>
+<td><code>private</code>, imposto pelo compilador; vale por
+<strong>classe</strong></td>
+</tr>
+<tr>
+<td>Python</td>
+<td>convenção <code>_campo</code></td>
+</tr>
+<tr>
+<td>JavaScript</td>
+<td><code>#campo</code> (recente); antes, somente via closures</td>
+</tr>
+<tr>
+<td>Algora</td>
+<td>escopo léxico; vale por <strong>objeto</strong></td>
+</tr>
+</tbody>
+</table>
+<aside class="notes">
+<p>⏱ 3 min.</p>
+<p>Diferença sutil Java × <code>algora</code>: em Java, o código da
+classe <code>Conta</code> pode ler <code>outra.saldo</code> de
+<strong>outra</strong> conta; em <code>algora</code>, cada objeto tem
+seu próprio ambiente capturado, e a privacidade é por objeto.</p>
+</aside>
+</section>
+<section id="this-self-e-obj" class="slide level2">
+<h2><code>this</code>, <code>self</code> e <code>obj</code></h2>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th></th>
+<th>Java</th>
+<th>Python</th>
+<th>JavaScript</th>
+<th><code>algora</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>nome</td>
+<td><code>this</code></td>
+<td><code>self</code></td>
+<td><code>this</code></td>
+<td><code>obj</code></td>
+</tr>
+<tr>
+<td>reservado?</td>
+<td>sim</td>
+<td>não</td>
+<td>sim</td>
+<td><strong>não</strong></td>
+</tr>
+<tr>
+<td>valor definido por</td>
+<td>compilador, na chamada</td>
+<td>método ligado</td>
+<td><strong>como</strong> a função é chamada</td>
+<td>escopo léxico</td>
+</tr>
+</tbody>
+</table>
+<aside class="notes">
+<p>⏱ 3 min.</p>
+<p>O <code>this</code> de JavaScript, nas funções comuns, não depende de
+onde a função foi escrita, mas de como foi chamada. Em termos da Unidade
+4, é mais próximo de escopo <strong>dinâmico</strong> do que de
+léxico.</p>
+<p>Python: <code>o.m(x)</code> equivale a <code>C.m(o, x)</code>;
+<code>self</code> é só o primeiro parâmetro, por convenção.</p>
+</aside>
+</section>
+<section id="método-destacado" class="slide level2">
+<h2>Método destacado</h2>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode algora"><code class="sourceCode algora"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> <span class="at">c</span> <span class="op">:=</span> <span class="fu">Contador</span>();</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> <span class="at">f</span> <span class="op">:=</span> c.inc;        <span class="co"># o método, sem o objeto</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fu">f</span>();                   <span class="co"># 1</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="fu">f</span>();                   <span class="co"># 2</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>c.<span class="fu">get</span>()                <span class="co"># 2</span></span></code></pre></div>
+<p>Por que isso funciona?</p>
+<div class="fragment">
+<p>Cada método é um closure: o ambiente de criação já foi fixado.</p>
+<aside class="notes">
+<p>⏱ 3 min.</p>
+<p>DEMO: <code>exemplos/metodo-destacado.alg</code>. Não há “objeto
+atual” a descobrir na chamada: ele foi fixado na criação. Escopo léxico
+de novo.</p>
+</aside>
+</div>
+</section>
+<section id="herança-e-polimorfismo-sem-class-parte-1"
+class="slide level2">
+<h2>Herança e polimorfismo, sem <code>class</code> (parte 1)</h2>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode algora"><code class="sourceCode algora"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> <span class="fu">Animal</span>(nome_dado) {</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">var</span> <span class="at">obj</span> <span class="op">:=</span> {};</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">var</span> <span class="at">nome</span> <span class="op">:=</span> nome_dado;</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  obj.<span class="at">voz</span> <span class="op">:=</span> <span class="kw">fn</span> () { SOM_GENERICO };</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  obj.<span class="at">fale</span> <span class="op">:=</span> <span class="kw">fn</span> () { obj.<span class="fu">voz</span>() };    <span class="co"># chama voz dinamicamente</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  obj.<span class="at">diga_nome</span> <span class="op">:=</span> <span class="kw">fn</span> () { nome };</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  obj</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> <span class="at">animal</span> <span class="op">:=</span> <span class="fu">Animal</span>(<span class="dv">1</span>);</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>animal.<span class="fu">fale</span>()</span></code></pre></div>
+</section>
+<section id="herança-e-polimorfismo-sem-class-parte-1-1"
+class="slide level2">
+<h2>Herança e polimorfismo, sem <code>class</code> (parte 1)</h2>
+<p>Como codificar <span class="highlight">herança</span> em Algora:</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode algora"><code class="sourceCode algora"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> <span class="fu">Cachorro</span>(nome) {</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">var</span> <span class="at">obj</span> <span class="op">:=</span> <span class="fu">Animal</span>(nome);       <span class="co"># pai cria o registro</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  obj.<span class="at">voz</span> <span class="op">:=</span> <span class="kw">fn</span> () { LATIDO };   <span class="co"># filho muta o MESMO registro</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  obj</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> <span class="fu">Gato</span>(nome) {</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">var</span> <span class="at">obj</span> <span class="op">:=</span> <span class="fu">Animal</span>(nome);       <span class="co"># mesmo padrão</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  obj.<span class="at">voz</span> <span class="op">:=</span> <span class="kw">fn</span> () { MIADO };</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  obj</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+</section>
+<section id="o-código" class="slide level2 small"
+style="--code-scale: 0.75; --column-scale: 1">
+<h2 class="small" style="--code-scale: 0.75; --column-scale: 1">O
+código</h2>
+<div class="columns">
+<div class="column" style="width:50%;">
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode algora"><code class="sourceCode algora"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> <span class="at">SOM_GENERICO</span> <span class="op">:=</span> <span class="dv">1</span>;</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> <span class="at">LATIDO</span> <span class="op">:=</span> <span class="dv">2</span>;</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> <span class="at">MIADO</span> <span class="op">:=</span> <span class="dv">3</span>;</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> <span class="fu">Animal</span>(nome_dado) {</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">var</span> <span class="at">obj</span> <span class="op">:=</span> {};</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">var</span> <span class="at">nome</span> <span class="op">:=</span> nome_dado;</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  obj.<span class="at">voz</span> <span class="op">:=</span> <span class="kw">fn</span> () { SOM_GENERICO };</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  obj.<span class="at">fale</span> <span class="op">:=</span> <span class="kw">fn</span> () { obj.<span class="fu">voz</span>() };</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  obj.<span class="at">diga_nome</span> <span class="op">:=</span> <span class="kw">fn</span> () { nome };</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  obj</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>O que é importante aqui? Observe onde os métodos <code>fale</code> e
+<code>voz</code> são escritos e sobreescritos. Observe onde
+<code>voz</code> é chamado.</p>
+</div><div class="column" style="width:50%;">
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode algora"><code class="sourceCode algora"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> <span class="fu">Cachorro</span>(nome) {</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">var</span> <span class="at">obj</span> <span class="op">:=</span> <span class="fu">Animal</span>(nome);</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  obj.<span class="at">voz</span> <span class="op">:=</span> <span class="kw">fn</span> () { LATIDO };</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  obj</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> <span class="fu">Gato</span>(nome) {</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">var</span> <span class="at">obj</span> <span class="op">:=</span> <span class="fu">Animal</span>(nome);</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  obj.<span class="at">voz</span> <span class="op">:=</span> <span class="kw">fn</span> () { MIADO };</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>  obj</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> <span class="at">animal</span> <span class="op">:=</span> <span class="fu">Animal</span>(<span class="dv">1</span>);</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> <span class="at">cachorro</span> <span class="op">:=</span> <span class="fu">Cachorro</span>(<span class="dv">2</span>);</span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> <span class="at">gato</span> <span class="op">:=</span> <span class="fu">Gato</span>(<span class="dv">3</span>);</span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>animal.<span class="fu">fale</span>()</span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a><span class="op">+</span> cachorro.<span class="fu">fale</span>() <span class="op">*</span> <span class="dv">10</span></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a><span class="op">+</span> gato.<span class="fu">fale</span>() <span class="op">*</span> <span class="dv">100</span></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a><span class="co"># -&gt; 321</span></span></code></pre></div>
+</div>
+</div>
+</section>
+<section id="ligação-tardia-late-binding" class="slide level2">
+<h2>Ligação tardia (<em>late binding</em>)</h2>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode algora"><code class="sourceCode algora"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> <span class="at">g</span> <span class="op">:=</span> <span class="fu">Gato</span>();</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> <span class="at">c</span> <span class="op">:=</span> <span class="fu">Cachorro</span>();</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>g.<span class="fu">fale</span>();        <span class="co"># 3 (MIADO)</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>c.<span class="fu">fale</span>();        <span class="co"># 2 (LATIDO)</span></span></code></pre></div>
+<p>O método <code>fale</code> foi escrito em <code>Animal</code>, mas
+ele invoca <code>obj.voz()</code> que só é corretamente definido nos
+registro das subclasses (<code>Gato</code> e <code>Cachorro</code>).</p>
+<p>Observe que este mecanismo permite que uma classe mãe
+(<code>Animal</code>) invoque métodos específicos de subclasses, mesmo
+que estas tenha sido escritas depois da classe da mãe. A isto se chama
+<em>late binding</em> e é uma das marcas da herança da OO.</p>
+</section>
+<section id="o-outro-caminho-tipos-algébricos-parte-1"
+class="slide level2">
+<h2>O outro caminho: tipos algébricos (parte 1)</h2>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode aljabr"><code class="sourceCode aljabr"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="bu">Animal</span> <span class="op">=</span> <span class="bu">Generico</span>(nome) <span class="op">|</span> <span class="bu">Cachorro</span>(nome) <span class="op">|</span> <span class="bu">Gato</span>(nome)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> som_generico <span class="op">=</span> <span class="dv">1</span> <span class="kw">in</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> latido       <span class="op">=</span> <span class="dv">2</span> <span class="kw">in</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> miado        <span class="op">=</span> <span class="dv">3</span> <span class="kw">in</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="co"># operações (funções separadas dos dados)</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> voz <span class="op">=</span> <span class="kw">fn</span> (a) <span class="op">=&gt;</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">match</span> a {</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>    <span class="bu">Generico</span>(<span class="kw">_</span>) <span class="op">=&gt;</span> som_generico</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>    <span class="bu">Cachorro</span>(<span class="kw">_</span>) <span class="op">=&gt;</span> latido</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>    <span class="bu">Gato</span>(<span class="kw">_</span>)     <span class="op">=&gt;</span> miado</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a><span class="kw">in</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> fale <span class="op">=</span> <span class="kw">fn</span> (a) <span class="op">=&gt;</span> <span class="fu">voz</span>(a) <span class="kw">in</span></span></code></pre></div>
+</section>
+<section id="o-outro-caminho-tipos-algébricos-parte-1-1"
+class="slide level2">
+<h2>O outro caminho: tipos algébricos (parte 1)</h2>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode aljabr"><code class="sourceCode aljabr"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># &quot;instâncias&quot; (valores imutáveis)</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> animal   <span class="op">=</span> <span class="bu">Generico</span>(<span class="dv">1</span>) <span class="kw">in</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> cachorro <span class="op">=</span> <span class="bu">Cachorro</span>(<span class="dv">2</span>) <span class="kw">in</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> gato     <span class="op">=</span> <span class="bu">Gato</span>(<span class="dv">3</span>) <span class="kw">in</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="fu">fale</span>(animal)              <span class="co"># -&gt; 1</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="op">+</span> <span class="fu">fale</span>(cachorro) <span class="op">*</span> <span class="dv">10</span>     <span class="co"># -&gt; 20</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="op">+</span> <span class="fu">fale</span>(gato) <span class="op">*</span> <span class="dv">100</span>        <span class="co"># -&gt; 300</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a><span class="co"># -&gt; 321</span></span></code></pre></div>
+</section>
+<section id="objetos-tipos-algébricos" class="slide level2">
+<h2>Objetos × tipos algébricos</h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>objetos (<code>algora</code>)</th>
+<th>tipos algébricos (<code>aljabr</code> v4)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>operações</td>
+<td><strong>dentro</strong> (campos)</td>
+<td><strong>fora</strong> (funções + <code>match</code>)</td>
+</tr>
+<tr>
+<td>escolha da operação</td>
+<td>leitura do campo</td>
+<td>forma do valor</td>
+</tr>
+<tr>
+<td>estado</td>
+<td>mutável</td>
+<td>imutável</td>
+</tr>
+<tr>
+<td>representação</td>
+<td>escondida (se quiser)</td>
+<td>sempre visível</td>
+</tr>
+<tr>
+<td>variantes</td>
+<td>abertas</td>
+<td>fechadas</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="o-problema-da-expressão-wadler-1998" class="slide level2">
+<h2>O problema da expressão (Wadler 1998)</h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>objetos</th>
+<th>tipos algébricos</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>nova <strong>variante</strong></td>
+<td>fácil</td>
+<td>difícil</td>
+</tr>
+<tr>
+<td>nova <strong>operação</strong></td>
+<td>difícil</td>
+<td>fácil</td>
+</tr>
+</tbody>
+</table>
+<p>O <em>expression problem</em> (ou problema da expressão), cunhado por
+Philip Wadler em 1998, é um dilema clássico de design e sistemas de
+tipos em linguagens de programação. Ele descreve a dificuldade de
+extender um sistema em duas dimensões ortogonais: novos tipos de dados
+vs novas operações, sem modificar o código existente e mantendo a
+segurança de tipos estática (em tempo de compilação).</p>
+<p>Voltaremos a mencionar este problema no final da unidade 8, quando já
+tivermos visto sistemas de tipos. Isso nos permitirá ainda discutir
+possíveis alternativas ao problema que LPs reais atuais procuram
+adotar.</p>
+<aside class="notes">
+<p>⏱ 5 min.</p>
+<p>Cada estilo é fechado em uma dimensão e aberto na outra. O dilema
+completo exige extensão sem alterar o código existente e sem perder
+verificação de tipos (na formulação original, estática); só fará pleno
+sentido depois da Unidade 8, onde voltaremos ao problema.</p>
+<p>Qual evolução é mais comum? Depende do domínio: compilador (linguagem
+estável, análises se multiplicam) favorece tipos algébricos; interface
+gráfica (componentes se multiplicam) favorece objetos.</p>
+<p>Garantias: com tipos algébricos e dados imutáveis, é mais fácil
+raciocinar sobre todos os casos. Com objetos e estado mutável, o
+comportamento depende do objeto e do seu estado, o que dificulta
+raciocínio e testes.</p>
+<p>Soluções reais, só menção: Visitor (Java), traits (Rust, Scala), type
+classes (Haskell), protocols (Swift),
+<code>functools.singledispatch</code> e protocolos em Python (sem
+verificação estática); interfaces Java resolvem parcialmente.</p>
+</aside>
+</section>
+<section id="linguagens-reais" class="slide level2 small">
+<h2 class="small">Linguagens reais</h2>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr>
+<th></th>
+<th><code>algora</code> v3</th>
+<th>Java</th>
+<th>Python</th>
+<th>JavaScript</th>
+<th>Rust</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>classes</td>
+<td>padrão (função)</td>
+<td>obrigatórias</td>
+<td>valores</td>
+<td>protótipos</td>
+<td>não há</td>
+</tr>
+<tr>
+<td>objeto</td>
+<td><code>obj</code></td>
+<td><code>this</code></td>
+<td><code>self</code></td>
+<td><code>this</code></td>
+<td><code>self</code></td>
+</tr>
+<tr>
+<td>estado privado</td>
+<td>escopo léxico</td>
+<td><code>private</code></td>
+<td><code>_x</code></td>
+<td><code>#x</code></td>
+<td>por módulo</td>
+</tr>
+<tr>
+<td>herança</td>
+<td>copiar e sobrescrever</td>
+<td>classes + interfaces</td>
+<td>múltipla</td>
+<td>protótipos</td>
+<td>traits</td>
+</tr>
+<tr>
+<td>tipos algébricos</td>
+<td><code>aljabr</code> v4</td>
+<td><code>sealed</code> + <code>record</code></td>
+<td><code>dataclass</code> + <code>match</code></td>
+<td>convenção</td>
+<td><code>enum</code> + <code>match</code></td>
+</tr>
+</tbody>
+</table>
+<p>Algol W → Simula 67 → Smalltalk → Self · ML → Haskell → Rust</p>
+<aside class="notes">
+<p>⏱ 4 min.</p>
+<p>Padrão geral: as linguagens modernas tendem a oferecer <strong>os
+dois</strong> caminhos (Java ganhou
+<code>sealed</code>/<code>record</code>/padrões; Python,
+<code>match</code>; Rust evitou herança e põe tipos algébricos no
+centro).</p>
+<p>História: Algol W (records), Simula 67 (classes, objetos, herança),
+Smalltalk (tudo é objeto, troca de mensagens: o dispatcher da Aula 18),
+Self (protótipos; JavaScript herdou), ML (tipos algébricos,
+padrões).</p>
+<p>Leituras: Reddy (1988), citado na Aula 18; Cook, <em>On Understanding
+Data Abstraction, Revisited</em> (2009); Wadler (1998).</p>
+</aside>
+</section>
+<section id="tabela-de-síntese" class="slide level2 small">
+<h2 class="small">Tabela de síntese</h2>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Linguagem</th>
+<th>Estado</th>
+<th>Dados</th>
+<th>Encapsulamento</th>
+<th>Extensibilidade</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>aljabr</code> v4</td>
+<td>—</td>
+<td>+ soma e produto</td>
+<td>nenhum</td>
+<td>operação fácil · variante difícil</td>
+</tr>
+<tr>
+<td><code>algora</code> v2</td>
+<td>store</td>
+<td>números + closures</td>
+<td>variáveis capturadas</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>algora</code> v3</td>
+<td>store</td>
+<td>+ records</td>
+<td>escopo léxico, por objeto</td>
+<td>variante fácil · operação difícil</td>
+</tr>
+</tbody>
+</table>
+<p>Mesma <code>aljabr</code> v3, dimensões
+<strong>independentes</strong>.</p>
+<aside class="notes">
+<p>⏱ 3 min.</p>
+<p>Atualizar <code>tabela-design.md</code> com as colunas de
+encapsulamento e extensibilidade. <code>aljabr</code> v4 e
+<code>algora</code> v3 partem da mesma <code>aljabr</code> v3 e variam
+independentemente em estado e em dados. É a tese da Unidade 9: paradigma
+é o conjunto de escolhas, não um rótulo.</p>
+</aside>
+</section>
+<section id="para-guardar" class="slide level2">
+<h2>Para guardar</h2>
+<ol type="1">
+<li>objeto = record de closures com estado compartilhado</li>
+<li>privacidade vem do <strong>escopo léxico</strong></li>
+<li>privacidade permite <strong>invariantes</strong></li>
+<li><code>obj</code> é variável comum; ligação tardia = leitura de
+campo</li>
+<li>herança e polimorfismo: <strong>padrões</strong></li>
+<li>objetos × tipos algébricos: linhas × colunas</li>
+<li>problema da expressão: cada estilo facilita uma evolução</li>
+</ol>
+<h3 id="leitura-e-referência-histórica-opcional">Leitura e referência
+histórica (opcional)</h3>
+<ul>
+<li>REDDY, Uday S. <em>Objects as Closures: Abstract Semantics of Object
+Oriented Languages</em>, 1988 (já indicado na Aula 18).</li>
+<li>COOK, William R. <em>On Understanding Data Abstraction,
+Revisited</em>,
+2009.</li>
+</ul>
+<div class="fragment">
+<p><strong>Próxima aula (Unidade 8)</strong>: os erros de hoje só
+aparecem <strong>ao executar</strong>. Dá para detectá-los antes?</p>
+<aside class="notes">
+<p>⏱ 3 min.</p>
+<p>Gancho: <code>alimenta(5, 3)</code>, o ramo <code>Pot</code>
+esquecido e a leitura de campo ausente só falham na execução. Começamos
+pelo fragmento aritmética + variáveis + funções de <code>aljabr</code>
+v3 e voltamos à decisão A da Aula 14 (<code>2 + (1 &lt; 2)</code>).</p>
+<p>Exercícios de fixação: ver README.md da aula (8 exercícios, sem
+entrega).</p>
+</aside>
+</div>
+</section>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+
+  <!-- reveal.js plugins -->
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/notes/notes.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/search/search.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/zoom/zoom.js"></script>
+
+  <script>
+
+      // Full list of configuration options available at:
+      // https://revealjs.com/config/
+      Reveal.initialize({
+        // Display controls in the bottom right corner
+        controls: false,
+
+        // Help the user learn the controls by providing hints, for example by
+        // bouncing the down arrow when they first encounter a vertical slide
+        controlsTutorial: true,
+
+        // Determines where controls appear, "edges" or "bottom-right"
+        controlsLayout: 'bottom-right',
+
+        // Visibility rule for backwards navigation arrows; "faded", "hidden"
+        // or "visible"
+        controlsBackArrows: 'faded',
+
+        // Display a presentation progress bar
+        progress: false,
+
+        // Display the page number of the current slide
+        slideNumber: 'c/t',
+
+        // 'all', 'print', or 'speaker'
+        showSlideNumber: 'all',
+
+        // Add the current slide number to the URL hash so that reloading the
+        // page/copying the URL will return you to the same slide
+        hash: true,
+
+        // Start with 1 for the hash rather than 0
+        hashOneBasedIndex: false,
+
+        // Flags if we should monitor the hash and change slides accordingly
+        respondToHashChanges: true,
+
+        // Push each slide change to the browser history
+        history: false,
+
+        // Enable keyboard shortcuts for navigation
+        keyboard: true,
+
+        // Enable the slide overview mode
+        overview: true,
+
+        // Disables the default reveal.js slide layout (scaling and centering)
+        // so that you can use custom CSS layout
+        disableLayout: false,
+
+        // Vertical centering of slides
+        center: false,
+
+        // Enables touch navigation on devices with touch input
+        touch: true,
+
+        // Loop the presentation
+        loop: false,
+
+        // Change the presentation direction to be RTL
+        rtl: false,
+
+        // see https://revealjs.com/vertical-slides/#navigation-mode
+        navigationMode: 'default',
+
+        // Randomizes the order of slides each time the presentation loads
+        shuffle: false,
+
+        // Turns fragments on and off globally
+        fragments: true,
+
+        // Flags whether to include the current fragment in the URL,
+        // so that reloading brings you to the same fragment position
+        fragmentInURL: true,
+
+        // Flags if the presentation is running in an embedded mode,
+        // i.e. contained within a limited portion of the screen
+        embedded: false,
+
+        // Flags if we should show a help overlay when the questionmark
+        // key is pressed
+        help: true,
+
+        // Flags if it should be possible to pause the presentation (blackout)
+        pause: true,
+
+        // Flags if speaker notes should be visible to all viewers
+        showNotes: false,
+
+        // Global override for autoplaying embedded media (null/true/false)
+        autoPlayMedia: null,
+
+        // Global override for preloading lazy-loaded iframes (null/true/false)
+        preloadIframes: null,
+
+        // Number of milliseconds between automatically proceeding to the
+        // next slide, disabled when set to 0, this value can be overwritten
+        // by using a data-autoslide attribute on your slides
+        autoSlide: 0,
+
+        // Stop auto-sliding after user input
+        autoSlideStoppable: true,
+
+        // Use this method for navigation when auto-sliding
+        autoSlideMethod: null,
+
+        // Specify the average time in seconds that you think you will spend
+        // presenting each slide. This is used to show a pacing timer in the
+        // speaker view
+        defaultTiming: null,
+
+        // Enable slide navigation via mouse wheel
+        mouseWheel: false,
+
+        // The display mode that will be used to show slides
+        display: 'block',
+
+        // Hide cursor if inactive
+        hideInactiveCursor: true,
+
+        // Time before the cursor is hidden (in ms)
+        hideCursorTime: 5000,
+
+        // Opens links in an iframe preview overlay
+        previewLinks: false,
+
+        // Transition style (none/fade/slide/convex/concave/zoom)
+        transition: 'none',
+
+        // Transition speed (default/fast/slow)
+        transitionSpeed: 'default',
+
+        // Transition style for full page slide backgrounds
+        // (none/fade/slide/convex/concave/zoom)
+        backgroundTransition: 'fade',
+
+        // Number of slides away from the current that are visible
+        viewDistance: 3,
+
+        // Number of slides away from the current that are visible on mobile
+        // devices. It is advisable to set this to a lower number than
+        // viewDistance in order to save resources.
+        mobileViewDistance: 2,
+
+        // The "normal" size of the presentation, aspect ratio will be preserved
+        // when the presentation is scaled to fit different resolutions. Can be
+        // specified using percentage units.
+        width: 1280,
+
+        height: 960,
+
+        // Factor of the display size that should remain empty around the content
+        margin: 3.0e-2,
+
+        // reveal.js plugins
+        plugins: [
+          RevealNotes,
+          RevealSearch,
+          RevealZoom
+        ]
+      });
+    </script>
+    </body>
+</html>
