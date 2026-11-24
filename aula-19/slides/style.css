@@ -78,6 +78,15 @@ body, .reveal-viewport {
   margin: 0.5em 0 0.5em;
 }
 
+.reveal h3 {
+  font-size: 1.5em;
+}
+
+.reveal h4 {
+  padding-top: 0.5em;
+  font-size: 1.3em;
+}
+
 .reveal ul,
 .reveal ol {
   display: block;

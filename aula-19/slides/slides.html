@@ -118,22 +118,25 @@ vs Orientação a Objetos</p>
 
 <section id="na-aula-passada" class="slide level2">
 <h2>Na aula passada…</h2>
-<p>Adicionamos <span class="highlight">OO</span> a Algora… e vimos que o
-essencial da OO foi adicionado à linguagem pela simples adição à
-modelagem de dados com <span class="highlight">registros</span>.</p>
+<p>..adicionamos suporte a <span class="highlight">registros</span> (ou
+<em>records</em>) a Algora… e vimos que isso combinado ao que já
+tínhamos na LP nos garantiu o essencial da <span
+class="highlight">Orientação a Objetos</span> na linguagem.</p>
 <div class="fragment">
 <h3 id="nesta-aula-vamos-discutir">Nesta aula vamos discutir…</h3>
 <ol type="1">
-<li>Quanto de Orientação a Objetos, de fato, adicionamos a Algora?</li>
-<li>Modelagem de dados com TAD vs com OO</li>
+<li>Quais das características essenciais da Orientação a Objetos estão,
+de fato, presentes em Algora com a adição de <em>records</em>?</li>
+<li>Como se comparam as estratégias de modelagem de dados compostos com
+TADs e com OO?</li>
 </ol>
 <aside class="notes">
 <p>⏱ 2 min.</p>
-<p>Hoje não há construção nova de linguagem. Vamos usar o que já temos
-(closures, estado, records) para compreender quanto de OO temos na LP.
-Com isso, fechamos a Unidade 7 comparando os dois caminhos abertos na
-Aula 17: tipos algébricos (<code>aljabr</code> v4) e objetos
-(<code>algora</code> v3).</p>
+<p>Nesta aula não há construção nova de linguagem. Não vou introduzir
+novas <em>features</em>, nem apresentarei qualquer nova formalização.
+Vamos apenas apreciar em mais detalhes o que acabamos de construir.
+Quais as caracterísitcas dessas linguagens e como se comparam entre si e
+com linguagens reais.</p>
 </aside>
 </div>
 </section>
@@ -156,43 +159,44 @@ class="highlight">dispatch</span>.</li>
 <div class="fragment">
 <aside class="notes">
 <p>⏱ 2 min.</p>
-<p>Aula 18: progressão closure → dispatcher → record de closures. Hoje
-fechamos os três itens. Reforçar: não há regra de avaliação nova; tudo
-que mostrarmos decorre das regras da Aula 18 (criação de record, leitura
-e escrita de campo).</p>
-<p>Lembrete sobre os exemplos: <code>algora</code> só tem números, então
-sons de animais serão códigos (1, 2) e usaremos <code>tamanho()</code>
-no lugar de <code>mostra()</code>.</p>
+<p>Relembre a Aula 18: progredimos de um simples contador feito como um
+closure, passamos por uma segunda implementação com um
+<em>dispatcher</em> explícito de closures e, por fim, introduzimos
+<em>records</em> e implementamos objetos como registros de closures que
+encapsulam (ou <em>enclausuram</em>) dados.</p>
+<p>Lembrete sobre os exemplos: Algora e Aljabr só têm números. Então
+tanto nomes, como sons de animais serão códigos numéricos.</p>
 </aside>
 </div>
 </section>
 <section id="o-contador-como-objeto" class="slide level2">
 <h2>O contador como objeto</h2>
-<pre class="text"><code>def Contador() {
-    var n := 0;
-    var obj := {};
-    obj.inc := fn () { n := n + 1; n };
-    obj.get := fn () { n };
-    obj
-}
-
-var c1 := Contador();
-var c2 := Contador();
-c1.inc();
-c1.inc();
-c2.inc();
-c1.get() + c2.get()        // 3</code></pre>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode algora"><code class="sourceCode algora"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> <span class="fu">Contdor</span>() {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> <span class="at">n</span> <span class="op">:=</span> <span class="dv">0</span>;</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> <span class="at">obj</span> <span class="op">:=</span> {};</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    obj.<span class="at">inc</span> <span class="op">:=</span> <span class="kw">fn</span> () { <span class="at">n</span> <span class="op">:=</span> n <span class="op">+</span> <span class="dv">1</span>; n };</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    obj.<span class="at">get</span> <span class="op">:=</span> <span class="kw">fn</span> () { n };</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    obj</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> <span class="at">c1</span> <span class="op">:=</span> <span class="fu">Contador</span>();</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> <span class="at">c2</span> <span class="op">:=</span> <span class="fu">Contador</span>();</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>c1.<span class="fu">inc</span>();</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>c1.<span class="fu">inc</span>();</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>c2.<span class="fu">inc</span>();</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>c1.<span class="fu">get</span>() <span class="op">+</span> c2.<span class="fu">get</span>()        <span class="co"># -&gt; 3</span></span></code></pre></div>
 <div class="fragment">
-<p>Temos o básico da OO: <span class="highlight">identidade</span> +
-<span class="highlight">estado</span> + <span
-class="highlight">comportamento</span></p>
+<p>Aqui temos o básico da OO: <span class="highlight">identidade</span>
++ <span class="highlight">estado</span> + <span
+class="highlight">comportamento</span>!</p>
 <aside class="notes">
 <p>⏱ 4 min.</p>
-<p>DEMO: <code>exemplos/contador-privado.alg</code>. Mostrar também o
-alias: <code>var c3 := c1;</code> e que <code>c3.inc()</code> afeta
-<code>c1</code>.</p>
-<p>O “construtor” é só uma função: cria <code>{}</code>, equipa com
-closures, devolve.</p>
+<p>Este código é o mesmo que vimos na aula anterior. Nele, a função
+<code>Contador()</code> é o construtor da “classe”. Ele cria dados
+privados (<code>n</code>); cria o registro (<code>obj</code>); popula o
+registro com os closures <code>inc</code> e <code>get</code>; e, por
+fim, retorna o registro como resultado.</p>
 </aside>
 </div>
 </section>
@@ -205,22 +209,27 @@ c1 ─────&gt; ℓ₁ ─────&gt; registro { inc ↦ closure₁,
 
 ambiente criado por Contador() (capturado pelas closures):
 n ──────&gt; ℓ₂ ─────&gt; 2</code></pre>
+<p>O estado está dividido entre o <span
+class="highlight">ambiente</span> e o <span
+class="highlight">store</span>.</p>
 <div class="fragment">
-<h3 id="o-que-objetos-acrescentam-a-closures-simples">O que objetos
-acrescentam a <em>closures</em> simples?</h3>
+<h4 id="o-que-objetosrecords-acrescentam-a-closures-simples">O que
+objetos/records acrescentam a <em>closures</em> simples?</h4>
 <ol type="1">
-<li>permitem agrupar vários métodos com um <strong>mesmo</strong>
+<li>permitem combinar múltipos métodos com um <strong>mesmo</strong>
 estado</li>
-<li>nos dão <strong>identidade</strong> única a cada objeto (o que faria
+<li>nos dão <strong>identidade</strong> única por objeto (o que faria
 <code>var c3 := c1;</code>?)</li>
-<li>permitem a <strong>mutação</strong> do estado interno.</li>
+<li>permitem a <strong>leitura</strong> e a <strong>mutação</strong> do
+estado interno.</li>
 </ol>
 <aside class="notes">
 <p>⏱ 4 min.</p>
-<p>A figura é simplificada. O record guarda só os métodos;
-<code>n</code> vive em outra localização, alcançável apenas pelas
-closures. Esse detalhe é o centro da próxima seção.</p>
-<p>Resposta: nada de mecanismo novo. O método <strong>é</strong> uma
+<p>A figura é uma simplificação. Diretamente, o objeto/<em>record</em>
+guarda só os métodos; <code>n</code> vive em outra localização,
+alcançável apenas pelas closures. Esse detalhe é o centro da próxima
+seção.</p>
+<p>Resposta: não há mecanismo novo. O método <strong>é</strong> uma
 closure (Unidade 4); a diferença está em como combinamos as construções
 que já existiam.</p>
 </aside>
@@ -230,44 +239,60 @@ que já existiam.</p>
 class="slide level2 small" style="--code-scale: 0.90">
 <h2 class="small" style="--code-scale: 0.90">Nossa OO suporta duas
 formas de estado</h2>
-<p>Campos privados (encapsulamento e <em>information hiding</em>)</p>
-<pre class="text"><code>def Contador() {
-    var n := 0;
-    var obj := {};
-    obj.inc := fn () { n := n + 1; n };
-    obj.get := fn () { n };
-    obj
-}</code></pre>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode algora"><code class="sourceCode algora"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> <span class="fu">Contador</span>() {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> <span class="at">n</span> <span class="op">:=</span> <span class="dv">0</span>;      <span class="co"># n está no ambiente acessível apenas via closures</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> <span class="at">obj</span> <span class="op">:=</span> {};</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    obj.<span class="at">inc</span> <span class="op">:=</span> <span class="kw">fn</span> () { <span class="at">n</span> <span class="op">:=</span> n <span class="op">+</span> <span class="dv">1</span>; n };</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    obj.<span class="at">get</span> <span class="op">:=</span> <span class="kw">fn</span> () { n };</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    obj</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Algora nos permite expressar campos <span
+class="highlight">privados</span> e <span
+class="highlight">públicos</span>.</p>
 <div class="fragment">
-<p>Campos públicos</p>
-<pre class="text"><code>def ContadorPublico() {
-    var obj := { n: 0 };
-    obj.inc := fn () { obj.n := obj.n + 1; obj.n };
-    obj.get := fn () { obj.n };
-    obj
-}</code></pre>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode algora"><code class="sourceCode algora"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> <span class="fu">ContadorPublico</span>() {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> <span class="at">obj</span> <span class="op">:=</span> { <span class="at">n</span><span class="op">:</span> <span class="dv">0</span> };    <span class="co"># obj.n é público e acessível via registro!</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    obj.<span class="at">inc</span> <span class="op">:=</span> <span class="kw">fn</span> () { obj.<span class="at">n</span> <span class="op">:=</span> obj.n <span class="op">+</span> <span class="dv">1</span>; obj.n };</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    obj.<span class="at">get</span> <span class="op">:=</span> <span class="kw">fn</span> () { obj.n };</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    obj</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 <aside class="notes">
 <p>⏱ 6 min.</p>
-<p>DEMO: <code>exemplos/contador-privado.alg</code> e
-<code>contador-publico.alg</code>.</p>
-<p>A célula <code>2 (!)</code>: escrever em campo inexistente
-<strong>cria</strong> o campo (é o que fazemos com
-<code>obj.inc := ...</code> sobre <code>{}</code>), mas o campo novo não
-tem relação com a variável <code>n</code> capturada. O estado interno
-continua intacto.</p>
+<p>Aqui nosso primeiro <em>corolário</em>: Algora admite campos públicos
+e campos privados. Já tínhamos visto que variáveis na função só estão
+disponíveis dentro dela e nos closures/métodos. Mas observe que se
+colocamos dados no registro, isso equivale a campos públicos.</p>
 </aside>
 </div>
 </section>
-<section id="de-onde-vem-a-privacidade" class="slide level2">
-<h2>De onde vem a privacidade?</h2>
-<p>Do <strong>escopo léxico</strong>.</p>
-<p>Não introduzimos <span class="highlight">nenhuma regra nova</span>: a
-variável <code>n</code> só existe no ambiente criado por
-<code>Contador()</code>, e só as closures criadas lá a capturaram.</p>
+<section id="e-de-onde-vem-a-privacidade" class="slide level2">
+<h2>E de onde vem a privacidade?</h2>
+<p>Vem da própria definição de <strong>escopo léxico</strong>.</p>
 <ul>
-<li><strong>agregação</strong>: dados e operações no mesmo lugar</li>
-<li><strong>encapsular</strong>: esconder a representação</li>
+<li>não foi necessário introduzir <span class="highlight">nenhuma regra
+nova</span></li>
+<li>a variável <code>n</code> só existe no ambiente criado por
+<code>Contador()</code></li>
+<li>e só as closures criadas por <code>Contador()</code> capturam
+<code>n</code></li>
+<li>portanto, nenhuma outra parte do código tem acesso a
+<code>n</code></li>
 </ul>
+<div class="fragment">
+<p>É importante distinguir dois conceitos:</p>
+<ul>
+<li><strong>agregar</strong>: colocar dados e operações em um mesmo
+lugar, sob uma mesma unidade indivisível;</li>
+<li><strong>encapsular</strong>: garantir que o acesso a dados privados
+se dê apenas através de uma interface pública controlada.</li>
+</ul>
+</div>
+<div class="fragment">
+<p>É o uso de <span class="highlight">records</span> que nos garante
+agregação, mas é o uso de <span class="highlight">closures</span> que
+nos garante o encapsulamento.</p>
 <aside class="notes">
 <p>⏱ 3 min.</p>
 <p>Pergunta antes de revelar: “não há regra de campo privado em
@@ -276,34 +301,44 @@ variável <code>n</code> só existe no ambiente criado por
 <code>Contador</code> encapsula. Em <code>algora</code>, o programador
 escolhe entre as duas representações.</p>
 </aside>
+</div>
 </section>
-<section id="invariantes" class="slide level2">
-<h2>Invariantes</h2>
-<pre class="text"><code>def Conta(inicial) {
-    var saldo := inicial;
-    var obj := {};
-    obj.deposita := fn (v) {
-        if v &lt; 0 { saldo } else { saldo := saldo + v; saldo }
-    };
-    obj.saca := fn (v) {
-        if saldo &lt; v { saldo } else { saldo := saldo - v; saldo }
-    };
-    obj.saldo := fn () { saldo };
-    obj
-}</code></pre>
-<p><strong>invariante</strong>: <code>saldo &gt;= 0</code>, para
-<strong>todo</strong> programa que usa a <code>Conta</code>.</p>
-<p>E se o saldo fosse um campo público? Se usássemos
+<section id="invariantes" class="slide level2 small"
+style="--code-scale: 0.90">
+<h2 class="small" style="--code-scale: 0.90">Invariantes</h2>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode algora"><code class="sourceCode algora"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> <span class="fu">Conta</span>(inicial) {</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> <span class="at">saldo</span> <span class="op">:=</span> <span class="kw">if</span> inicial <span class="op">&lt;</span> <span class="dv">0</span> { <span class="dv">0</span> } <span class="kw">else</span> { inicial };</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> <span class="at">obj</span> <span class="op">:=</span> {};</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    obj.<span class="at">deposita</span> <span class="op">:=</span> <span class="kw">fn</span> (v) {</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>        <span class="kw">if</span> v <span class="op">&lt;</span> <span class="dv">0</span> { saldo } <span class="kw">else</span> { <span class="at">saldo</span> <span class="op">:=</span> saldo <span class="op">+</span> v; saldo }</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    };</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    obj.<span class="at">saca</span> <span class="op">:=</span> <span class="kw">fn</span> (v) {</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>        <span class="kw">if</span> v <span class="op">&lt;</span> <span class="dv">0</span> { saldo } <span class="kw">else</span> {</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>            <span class="kw">if</span> saldo <span class="op">&lt;</span> v { saldo } <span class="kw">else</span> { <span class="at">saldo</span> <span class="op">:=</span> saldo <span class="op">-</span> v; saldo }</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    };</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    obj.<span class="at">saldo</span> <span class="op">:=</span> <span class="kw">fn</span> () { saldo };</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    obj</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p><strong>Invariante</strong>: <code>saldo &gt;= 0</code>, para
+<strong>todo</strong> programa que usa a <code>Conta</code>. Mas e se o
+saldo fosse um campo público? Se usássemos
 <code>c.saldo := -1000</code>?</p>
 <aside class="notes">
 <p>⏱ 4 min.</p>
-<p>DEMO: <code>exemplos/conta-invariante.alg</code>. Mostrar o ataque na
-versão pública.</p>
-<p>Com saldo privado, o invariante é propriedade da
-<strong>conta</strong>. Com saldo público, vira promessa de
+<p>Uma invariante em OO é uma condição sobre o estado de um objeto que
+deve ser sempre verdadeira quando o objeto está observável (ou em
+<em>estado estável</em>). Invariantes são importantes para provar
+propriedades de objetos. Para poder garantir invariantes, o
+encapsulamento é propriedade chave! Na prática, garantimos uma
+invariante por indução: a base (o construtor deve estabelecer a
+condição); o passo (cada método público deve preservar a condição); e
+por fechamento (aqui é que entra o encapsulamento: nenhum código externo
+deve poder alterar o estado sem passar pelos métodos).</p>
+<p>Com saldo privado, a invariante é propriedade da
+<strong>conta</strong>. Com saldo público, precisa depender de
 <strong>todos os usuários</strong> da conta.</p>
-<p>Gancho: volta no Interlúdio (Aula 28), quando formos além de nomear
-uma interface e perguntarmos como especificar o que ela promete.</p>
 </aside>
 </section>
 <section id="encapsulamento-nas-linguagens-reais" class="slide level2">
@@ -388,6 +423,9 @@ seu próprio ambiente capturado, e a privacidade é por objeto.</p>
 </table>
 <aside class="notes">
 <p>⏱ 3 min.</p>
+<p>Em Algora, o <code>obj</code> que usamos é uma simples variável da
+linguagem. Não há qualquer semântica especial para ela. Em outras LPs,
+contudo, é comum haver semântica especial.</p>
 <p>O <code>this</code> de JavaScript, nas funções comuns, não depende de
 onde a função foi escrita, mas de como foi chamada. Em termos da Unidade
 4, é mais próximo de escopo <strong>dinâmico</strong> do que de
@@ -409,9 +447,10 @@ class="sourceCode algora"><code class="sourceCode algora"><span id="cb6-1"><a hr
 <p>Cada método é um closure: o ambiente de criação já foi fixado.</p>
 <aside class="notes">
 <p>⏱ 3 min.</p>
-<p>DEMO: <code>exemplos/metodo-destacado.alg</code>. Não há “objeto
-atual” a descobrir na chamada: ele foi fixado na criação. Escopo léxico
-de novo.</p>
+<p>Métodos destacados (ou <em>detached methods</em>) são métodos que são
+“removidos” ou “independizados” de seus objetos e usados como funções.
+Em Algora, <em>destacar</em> métodos não altera o <em>closure</em>, logo
+não desvincula dos dados do objeto. O destaque é apenas sintático.</p>
 </aside>
 </div>
 </section>
@@ -430,11 +469,17 @@ class="sourceCode algora"><code class="sourceCode algora"><span id="cb7-1"><a hr
 <span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> <span class="at">animal</span> <span class="op">:=</span> <span class="fu">Animal</span>(<span class="dv">1</span>);</span>
 <span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>animal.<span class="fu">fale</span>()</span></code></pre></div>
+<p>Considere o construtor da “classe” Animal. Dos três métodos
+definidos, o método <code>fale</code> é especialmente interessante
+porque invoca dinamicamente o método <code>voz</code>.</p>
+<aside class="notes">
+<p>Observe que o método <code>fale</code> apenas invoca a função
+<code>voz</code>.</p>
+</aside>
 </section>
-<section id="herança-e-polimorfismo-sem-class-parte-1-1"
+<section id="herança-e-polimorfismo-sem-class-parte-2"
 class="slide level2">
-<h2>Herança e polimorfismo, sem <code>class</code> (parte 1)</h2>
-<p>Como codificar <span class="highlight">herança</span> em Algora:</p>
+<h2>Herança e polimorfismo, sem <code>class</code> (parte 2)</h2>
 <div class="sourceCode" id="cb8"><pre
 class="sourceCode algora"><code class="sourceCode algora"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> <span class="fu">Cachorro</span>(nome) {</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">var</span> <span class="at">obj</span> <span class="op">:=</span> <span class="fu">Animal</span>(nome);       <span class="co"># pai cria o registro</span></span>
@@ -447,11 +492,22 @@ class="sourceCode algora"><code class="sourceCode algora"><span id="cb8-1"><a hr
 <span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  obj.<span class="at">voz</span> <span class="op">:=</span> <span class="kw">fn</span> () { MIADO };</span>
 <span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  obj</span>
 <span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Aqui vemos como codificar <span class="highlight">herança</span> em
+Algora. O construtor da subclasse invoca o da superclasse em vez de
+partir de um objeto vazio. Em seguida, apenas o complementa. Aqui,
+<code>Cachorro</code> e <code>Gato</code> definem sua própria
+<code>voz</code>, sobreescrevendo o método da superclasse.</p>
+<aside class="notes">
+<p>Observe a relação conceitual que o código construtor da subclasse
+estabelece ao usar o construtor da superclasse: um <code>Cachorro</code>
+e um <code>Gato</code> são, literalmente, objetos da classe
+<code>Animal</code>.</p>
+</aside>
 </section>
-<section id="o-código" class="slide level2 small"
+<section id="o-código-completo" class="slide level2 small"
 style="--code-scale: 0.75; --column-scale: 1">
-<h2 class="small" style="--code-scale: 0.75; --column-scale: 1">O
-código</h2>
+<h2 class="small" style="--code-scale: 0.75; --column-scale: 1">O código
+completo</h2>
 <div class="columns">
 <div class="column" style="width:50%;">
 <div class="sourceCode" id="cb9"><pre
@@ -467,9 +523,9 @@ class="sourceCode algora"><code class="sourceCode algora"><span id="cb9-1"><a hr
 <span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  obj.<span class="at">diga_nome</span> <span class="op">:=</span> <span class="kw">fn</span> () { nome };</span>
 <span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  obj</span>
 <span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
-<p>O que é importante aqui? Observe onde os métodos <code>fale</code> e
-<code>voz</code> são escritos e sobreescritos. Observe onde
-<code>voz</code> é chamado.</p>
+<p>O importante aqui é observar que a única invocação a
+<code>voz()</code> está dentro de <code>Animal</code>. E que mesmo
+assim, o <code>voz()</code> das subclasses é invocado.</p>
 </div><div class="column" style="width:50%;">
 <div class="sourceCode" id="cb10"><pre
 class="sourceCode algora"><code class="sourceCode algora"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> <span class="fu">Cachorro</span>(nome) {</span>
@@ -494,22 +550,40 @@ class="sourceCode algora"><code class="sourceCode algora"><span id="cb10-1"><a h
 <span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a><span class="co"># -&gt; 321</span></span></code></pre></div>
 </div>
 </div>
+<aside class="notes">
+<p>É importante observar que <code>gato.fale()</code> invoca uma função
+que só está definida no corpo de <code>Animal</code>, mas que terminal
+por executar o código de <code>voz()</code> em <code>Gato</code>.</p>
+<p>Também é importante observar que <code>Gato</code> poderia ter sido
+adicionada de forma totalmente independente de <code>Animal</code>. Ou
+seja, não há qualquer previsão de que <code>Gato</code> iria existir
+quando <code>Animal</code> foi criado, mas mesmo assim, a invocação de
+<code>fale()</code> em <code>Animal</code> terminará por invocar o
+método <code>voz()</code> de <code>Gato</code>.</p>
+<p>É a isso que chamamos: <em>late binding</em>.</p>
+</aside>
 </section>
-<section id="ligação-tardia-late-binding" class="slide level2">
-<h2>Ligação tardia (<em>late binding</em>)</h2>
+<section id="ligação-tardia-ou-late-binding" class="slide level2">
+<h2>Ligação tardia ou <em>late binding</em></h2>
 <div class="sourceCode" id="cb11"><pre
 class="sourceCode algora"><code class="sourceCode algora"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> <span class="at">g</span> <span class="op">:=</span> <span class="fu">Gato</span>();</span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> <span class="at">c</span> <span class="op">:=</span> <span class="fu">Cachorro</span>();</span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>g.<span class="fu">fale</span>();        <span class="co"># 3 (MIADO)</span></span>
 <span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>c.<span class="fu">fale</span>();        <span class="co"># 2 (LATIDO)</span></span></code></pre></div>
-<p>O método <code>fale</code> foi escrito em <code>Animal</code>, mas
+<p>O método <code>fale</code> está contido em <code>Animal</code>, mas
 ele invoca <code>obj.voz()</code> que só é corretamente definido nos
-registro das subclasses (<code>Gato</code> e <code>Cachorro</code>).</p>
-<p>Observe que este mecanismo permite que uma classe mãe
-(<code>Animal</code>) invoque métodos específicos de subclasses, mesmo
-que estas tenha sido escritas depois da classe da mãe. A isto se chama
-<em>late binding</em> e é uma das marcas da herança da OO.</p>
+registro das subclasses (<code>Gato</code> e <code>Cachorro</code>).
+Observe que <code>gato.fale()</code> irá executar <code>fale()</code>
+definido apenas em <code>Animal</code> e ele terá que invocar
+<code>voz()</code> definido em <code>Gato</code>.</p>
+<p>Este mecanismo permite que uma classe mãe (<code>Animal</code>)
+invoque métodos de subclasses, mesmo que estas tenham sido escritas
+depois da classe mãe. A isto se chama <span class="highlight"><em>late
+binding</em></span> e é uma das marcas registradas da herança em OO. E é
+ele que viabiliza o <span class="highlight">polimorfismo de
+subtipos</span> (é o que faz <code>x.fale()</code> se comportar
+diferente para cada subtipo).</p>
 </section>
 <section id="o-outro-caminho-tipos-algébricos-parte-1"
 class="slide level2">
@@ -772,20 +846,9 @@ independentemente em estado e em dados. É a tese da Unidade 9: paradigma
 é o conjunto de escolhas, não um rótulo.</p>
 </aside>
 </section>
-<section id="para-guardar" class="slide level2">
-<h2>Para guardar</h2>
-<ol type="1">
-<li>objeto = record de closures com estado compartilhado</li>
-<li>privacidade vem do <strong>escopo léxico</strong></li>
-<li>privacidade permite <strong>invariantes</strong></li>
-<li><code>obj</code> é variável comum; ligação tardia = leitura de
-campo</li>
-<li>herança e polimorfismo: <strong>padrões</strong></li>
-<li>objetos × tipos algébricos: linhas × colunas</li>
-<li>problema da expressão: cada estilo facilita uma evolução</li>
-</ol>
-<h3 id="leitura-e-referência-histórica-opcional">Leitura e referência
-histórica (opcional)</h3>
+<section id="leituras-e-referências-históricas-opcional"
+class="slide level2">
+<h2>Leituras e referências históricas (opcional)</h2>
 <ul>
 <li>REDDY, Uday S. <em>Objects as Closures: Abstract Semantics of Object
 Oriented Languages</em>, 1988 (já indicado na Aula 18).</li>

@@ -4,6 +4,8 @@
 #   make RATIO=16x9 gera em outra proporção (4x3, 16x9, 16x10, 3x2)
 #   make vendor     baixa o reveal.js para ./reveal.js (uso sem internet)
 #   make serve      serve a pasta em http://localhost:8000 (notas: tecla S)
+#   make watch      regera slides.html a cada gravação (sem dependências)
+#   make live       watch + servidor com recarga automática do navegador (precisa de npx)
 #   make clean      remove slides.html
 #
 # Se existir ./reveal.js, ele é usado; caso contrário, usa-se o CDN.
@@ -36,7 +38,7 @@ FLAGS := -t revealjs -s \
          --syntax-definition=aljabr.xml \
          --highlight-style=pygments
 
-.PHONY: all vendor serve clean FORCE
+.PHONY: all vendor serve watch live clean FORCE
 
 all: $(OUT)
 
@@ -49,6 +51,19 @@ vendor:
 
 serve: all
 	python3 -m http.server 8000
+
+# Regera ao detectar mudança em qualquer fonte (consulta a cada 1 s).
+watch:
+	@echo "Observando $(SRC), style.css, include-code.lua, exemplos/ (Ctrl-C para sair)"
+	@last=""; while true; do \
+	  cur=$$(cat $(SRC) style.css include-code.lua exemplos/* 2>/dev/null | cksum); \
+	  if [ "$$cur" != "$$last" ]; then last="$$cur"; $(MAKE) --no-print-directory all && echo "[$$(date +%H:%M:%S)] slides.html atualizado"; fi; \
+	  sleep 1; done
+
+# watch + servidor que recarrega o navegador quando slides.html muda.
+live:
+	@trap 'kill 0' EXIT; $(MAKE) --no-print-directory watch & \
+	npx --yes live-server --port=8000 --open=/slides.html --watch=slides.html --no-css-inject
 
 clean:
 	rm -f $(OUT)
