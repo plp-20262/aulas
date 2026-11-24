@@ -15,7 +15,7 @@
 >    com tipos algébricos e com objetos? Em particular, que preço se
 >    paga em cada caso quando o programa **evolui**?
 >
-> - Os slides da aula acompanham as seções 1 a 8 deste texto, no diretório [`slides/`](slides/)
+> - Os [slides da aula](https://plp-20262.github.io/aulas/aula-19/slides/slides.html#/title-slide) acompanham as seções 1 a 8 deste texto, no diretório [`slides/`](slides/)
 > - O código completo dos exemplos está no diretório [`exemplos/`](exemplos/).
 
 
