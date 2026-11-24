@@ -1,0 +1,36 @@
+type Animal = Generico(nome) | Cachorro(nome) | Gato(nome)
+
+let som_generico = 1 in
+let latido       = 2 in
+let miado        = 3 in
+
+# operações (as funções ficam separadas da caracterização dos dados)
+
+let voz = fn (a) =>
+  match a {
+    Generico(_) => som_generico
+    Cachorro(_) => latido
+    Gato(_)     => miado
+  }
+
+in let fale = fn (a) => voz(a) in
+
+let diga_nome = fn (a) =>
+  match a {
+    Generico(n) => n
+    Cachorro(n) => n
+    Gato(n)     => n
+  }
+in
+
+# "instâncias" (valores imutáveis)
+
+let animal   = Generico(1) in
+let cachorro = Cachorro(2) in
+let gato     = Gato(3) in
+
+fale(animal)              # -> 1
++ fale(cachorro) * 10     # -> 20
++ fale(gato) * 100        # -> 300
+
+# -> 321
