@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE language SYSTEM "language.dtd">
+<language name="Aljabr" version="4" kateversion="5.0" section="Sources" extensions="*.aljabr;*.alj">
+  <highlighting>
+    <list name="keywords">
+      <item>letrec</item>
+      <item>let</item>
+      <item>in</item>
+      <item>fn</item>
+      <item>if</item>
+      <item>then</item>
+      <item>else</item>
+      <item>type</item>
+      <item>match</item>
+    </list>
+
+    <contexts>
+      <context name="Normal" attribute="Normal Text" lineEndContext="#stay">
+        <!-- Comentários (# e //) -->
+        <DetectChar attribute="Comment" context="Comment" char="#" />
+        <Detect2Chars attribute="Comment" context="Comment" char="/" char1="/" />
+
+        <!-- Palavras reservadas -->
+        <keyword attribute="Keyword" context="#stay" String="keywords" />
+
+        <!-- Curinga '_' como palavra isolada -->
+        <RegExpr attribute="Keyword" context="#stay" String="\b_\b" />
+
+        <!-- Nome do tipo declarado após 'type' -->
+        <RegExpr attribute="DataType" context="#stay" String="(?&lt;=\btype\s+)[A-Z][A-Za-z0-9_]*" />
+
+        <!-- Construtores e tipos (CONSTR: iniciados por maiúscula) -->
+        <RegExpr attribute="Constructor" context="#stay" String="\b[A-Z][A-Za-z0-9_]*" />
+
+        <!-- Chamada de função: identificador minúsculo seguido de '(' -->
+        <RegExpr attribute="Function" context="#stay" String="\b[a-z_][A-Za-z0-9_]*(?=\s*\()" />
+
+        <!-- Números (INTEIRO) -->
+        <Int attribute="Decimal" context="#stay" />
+
+        <!-- Operadores de dois caracteres (antes dos de um caractere) -->
+        <StringDetect attribute="Operator" context="#stay" String="=&gt;" />
+        <StringDetect attribute="Operator" context="#stay" String="**" />
+        <StringDetect attribute="Operator" context="#stay" String="==" />
+
+        <!-- Operadores de um caractere e pontuadores -->
+        <AnyChar attribute="Operator" context="#stay" String="+-*/&lt;=|" />
+        <AnyChar attribute="Symbol" context="#stay" String="{}().,;" />
+      </context>
+
+      <context name="Comment" attribute="Comment" lineEndContext="#pop" />
+    </contexts>
+
+    <itemDatas>
+      <itemData name="Normal Text" defStyleNum="dsNormal" />
+      <itemData name="Keyword"     defStyleNum="dsKeyword" />
+      <itemData name="DataType"    defStyleNum="dsDataType" />
+      <itemData name="Constructor" defStyleNum="dsBuiltIn" />
+      <itemData name="Function"    defStyleNum="dsFunction" />
+      <itemData name="Decimal"     defStyleNum="dsDecVal" />
+      <itemData name="Operator"    defStyleNum="dsOperator" />
+      <itemData name="Symbol"      defStyleNum="dsNormal" />
+      <itemData name="Comment"     defStyleNum="dsComment" />
+    </itemDatas>
+  </highlighting>
+</language>

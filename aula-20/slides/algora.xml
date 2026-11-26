@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE language SYSTEM "language.dtd">
+<language name="Algora" version="3" kateversion="5.0" section="Sources" extensions="*.algora;*.alg">
+  <highlighting>
+    <list name="keywords">
+      <item>var</item>
+      <item>def</item>
+      <item>fn</item>
+      <item>if</item>
+      <item>else</item>
+      <item>while</item>
+    </list>
+
+    <contexts>
+      <context name="Normal" attribute="Normal Text" lineEndContext="#stay">
+        <!-- Comments (// and #) -->
+        <Detect2Chars attribute="Comment" context="Comment" char="/" char1="/" />
+        <DetectChar attribute="Comment" context="Comment" char="#" />
+
+        <!-- Keywords -->
+        <keyword attribute="Keyword" context="#stay" String="keywords" />
+
+        <!-- Record field label: NOME followed by ':' -->
+        <RegExpr attribute="Field" context="#stay" String="[a-zA-Z_][a-zA-Z0-9_]*(?=\s*:)" />
+
+        <!-- Function declaration name: after 'def' -->
+        <RegExpr attribute="Function" context="#stay" String="(?&lt;=\bdef\s+)[a-zA-Z_][a-zA-Z0-9_]*" />
+
+        <!-- Field access: .NOME -->
+        <RegExpr attribute="Field" context="#stay" String="(?&lt;=\.)[a-zA-Z_][a-zA-Z0-9_]*" />
+
+        <!-- Function / method call: NOME followed by '(' -->
+        <RegExpr attribute="Function" context="#stay" String="[a-zA-Z_][a-zA-Z0-9_]*(?=\s*\()" />
+
+        <!-- Numbers (INTEIRO) -->
+        <Int attribute="Decimal" context="#stay" />
+
+        <!-- Multi-character operators (must come before single-char) -->
+        <StringDetect attribute="Operator" context="#stay" String=":=" />
+        <StringDetect attribute="Operator" context="#stay" String="**" />
+        <StringDetect attribute="Operator" context="#stay" String="==" />
+
+        <!-- Single-character operators and punctuation -->
+        <AnyChar attribute="Operator" context="#stay" String="+-*/&lt;=:" />
+        <AnyChar attribute="Symbol" context="#stay" String="{}().,;" />
+      </context>
+
+      <context name="Comment" attribute="Comment" lineEndContext="#pop" />
+    </contexts>
+
+    <itemDatas>
+      <itemData name="Normal Text" defStyleNum="dsNormal" />
+      <itemData name="Keyword"     defStyleNum="dsKeyword" />
+      <itemData name="Function"    defStyleNum="dsFunction" />
+      <itemData name="Field"       defStyleNum="dsAttribute" />
+      <itemData name="Decimal"     defStyleNum="dsDecVal" />
+      <itemData name="Operator"    defStyleNum="dsOperator" />
+      <itemData name="Symbol"      defStyleNum="dsNormal" />
+      <itemData name="Comment"     defStyleNum="dsComment" />
+    </itemDatas>
+  </highlighting>
+</language>

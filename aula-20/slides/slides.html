@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="pandoc">
+  <meta name="author" content="Dalton Serey">
+  <title>Aula 19 — Closures × objetos, encapsulamento e o problema da
+expressão</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+  <style>
+    .reveal .sourceCode {  /* see #7635 */
+      overflow: visible;
+    }
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/white.css" id="theme">
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+<section id="title-slide">
+  <h1 class="title">Tipos Estáticos</h1>
+  <p class="subtitle">Unidade 8 / Aula 20<br>Linguagem Church com
+Sistema Estático de Tipos</p>
+  <p class="author">Dalton Serey</p>
+  <p class="date">25 de novembro de 2026</p>
+</section>
+
+<section id="recordemos-aljabr-v3" class="slide level2">
+<h2>Recordemos Aljabr v3…</h2>
+<pre class="text"><code>aljabr v3 ┬──&gt; aljabr v4 (tipos algébricos, `match`)
+          └──&gt; algora    (estado, comandos, `while`) ──&gt; (objetos)</code></pre>
+<aside class="notes">
+<ul>
+<li>na Unidade 08 vamos retomar <span class="highlight">Aljabr
+v3</span></li>
+<li>diferente de nossa última versão, a versão <span
+class="highlight">v3</span> é bem mais simples
+<ul>
+<li>não tem suporte a <em>Tipos Algébricos de Dados</em></li>
+<li>e sequer tem laços <code>while</code></li>
+</ul></li>
+</ul>
+</aside>
+<div class="fragment">
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode aljabr"><code class="sourceCode aljabr"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> dobro <span class="op">=</span> <span class="kw">fn</span> (x) <span class="op">=&gt;</span> x <span class="op">*</span> <span class="dv">2</span> <span class="kw">in</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dobro</span>(<span class="dv">21</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode aljabr"><code class="sourceCode aljabr"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">letrec</span> fat <span class="op">=</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">fn</span> (n) <span class="op">=&gt;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">if</span> n <span class="op">==</span> <span class="dv">0</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>        <span class="kw">then</span> <span class="dv">1</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>        <span class="kw">else</span> n <span class="op">*</span> <span class="fu">fat</span>(n <span class="op">-</span> <span class="dv">1</span>) <span class="kw">in</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="fu">fat</span>(<span class="dv">6</span>)</span></code></pre></div>
+</div>
+</section>
+<section id="mas-que-valores-produzem-estes-exemplos"
+class="slide level2">
+<h2>Mas… que valores produzem estes exemplos?</h2>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode aljabr"><code class="sourceCode aljabr"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="dv">2</span> <span class="op">+</span> (<span class="dv">1</span> <span class="op">&lt;</span> <span class="dv">2</span>)</span></code></pre></div>
+<div class="fragment">
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode aljabr"><code class="sourceCode aljabr"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">fn</span> (n) <span class="op">=&gt;</span> n <span class="op">+</span> <span class="dv">1</span>) <span class="op">+</span> <span class="dv">2</span></span></code></pre></div>
+</div>
+<div class="fragment">
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode aljabr"><code class="sourceCode aljabr"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> f <span class="op">=</span> <span class="dv">10</span> <span class="kw">in</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">f</span>(<span class="dv">2</span>)</span></code></pre></div>
+</div>
+<div class="fragment">
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode aljabr"><code class="sourceCode aljabr"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> soma1 <span class="op">=</span> <span class="kw">fn</span> (x) <span class="op">=&gt;</span> x <span class="op">+</span> <span class="dv">1</span> <span class="kw">in</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">soma1</span>(<span class="kw">fn</span> (y) <span class="op">=&gt;</span> <span class="dv">2</span> <span class="op">*</span> y)</span></code></pre></div>
+</div>
+</section>
+<section id="e-estes-dois" class="slide level2">
+<h2>E estes dois?</h2>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode aljabr"><code class="sourceCode aljabr"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">letrec</span> f <span class="op">=</span> <span class="kw">fn</span> (n) <span class="op">=&gt;</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">if</span> n <span class="op">==</span> <span class="dv">0</span> </span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">then</span> <span class="dv">1</span> </span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">else</span> n <span class="op">+</span> (<span class="kw">fn</span> (x) <span class="op">=&gt;</span> x)</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="kw">in</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="fu">f</span>(<span class="dv">0</span>)</span></code></pre></div>
+<div class="fragment">
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode aljabr"><code class="sourceCode aljabr"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">letrec</span> f <span class="op">=</span> <span class="kw">fn</span> (n) <span class="op">=&gt;</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">if</span> n <span class="op">==</span> <span class="dv">0</span> </span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">then</span> <span class="dv">1</span> </span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">else</span> n <span class="op">+</span> (<span class="kw">fn</span> (x) <span class="op">=&gt;</span> x)</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="kw">in</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="fu">f</span>(<span class="dv">1</span>)       <span class="co"># só mudei o valor do argumento!</span></span></code></pre></div>
+<aside class="notes">
+<p>Neste slide mostramos o problema de não termos sistema de tipos.</p>
+</aside>
+</div>
+</section>
+<section id="o-que-os-programas-têm-em-comum" class="slide level2">
+<h2>O que os programas têm em comum?</h2>
+<p>Todos esses programas…</p>
+<ol type="1">
+<li>têm erros de programação que <span class="highlight">não são de
+sintaxe</span></li>
+<li>produzem um <span class="highlight"><code>erro</code></span> como
+resultado ou…</li>
+<li>… pior, produzem <span class="highlight">dados
+questionáveis</span>!</li>
+</ol>
+<div class="fragment">
+<p>Mais ainda… em todos os casos, o defeito <span
+class="red"><strong>está no texto do programa</strong></span> e não
+depende de nenhum valor de entrada.</p>
+<p>E como as diferenças entre um número e uma função ou o resultado de
+uma comparação são propriedades do texto, é razoável assumir que <span
+class="red">pode ser verificada <strong>sem
+executar</strong></span>.</p>
+</div>
+</section>
+<section id="este-é-nosso-problema-central"
+class="slide level2 concept">
+<h2 class="concept">Este é nosso problema central</h2>
+<p>Como podemos projetar uma linguagem de modo que erros dessa natureza
+sejam <span class="red"><strong>detectados antes da
+execução</strong></span>, apenas examinando o código do programa?</p>
+<div class="fragment">
+<div class="destaque">
+<p>E esse é o problema que <span class="highlight">sistemas de
+tipos</span> resolvem.</p>
+</div>
+</div>
+</section>
+<section id="mas-o-que-é-um-tipo" class="slide level2">
+<h2>Mas… o que é um tipo?</h2>
+<p>Quando estudamos programação, costumamos dizer que um tipo é:</p>
+<ul>
+<li>um conjunto de valores (e suas representações)</li>
+<li>e o conjunto de operações que se aplica a esses valores</li>
+</ul>
+<p>Esta visão, contudo, foca no <span class="highlight">tempo de
+execução</span> do programa. Nesta unidade do curso, contudo, convém
+focar no <span class="red"><strong>tempo de análise</strong></span> dos
+programas (que às vezes chamamos de <em>tempo de compilação</em>).</p>
+<div class="fragment">
+<p>Por isso, esta definição é preferível.</p>
+<div class="destaque">
+<p>Um tipo é uma abstração que caracteriza uma coleção de possíveis
+valores e determina como esses valores podem ser usados por um programa.
+Em tempo de análise, um tipo se reduz a um <em>nome</em> que expressa um
+conjunto de valores possíveis.</p>
+</div>
+<aside class="notes">
+<p>IMPORTANTE: as duas definições se complementam! Elas não são
+inconsistentes. As diferenças são consequência do foco de interesse que
+temos quando usamos cada uma das duas.</p>
+</aside>
+</div>
+</section>
+<section id="tipos-e-expressões" class="slide level2">
+<h2>Tipos e expressões</h2>
+<p>Uma consequência desta nova definição de <em>tipo</em> é que ela nos
+permite atribuir tipos não apenas a <span
+class="highlight">valores</span>, mas também a <span
+class="highlight">expressões</span>.</p>
+<p>Essa mudança de foco tem um propósito: queremos poder dizer e
+demonstrar que uma dada expressão <code>e</code> tem (ou não) certo tipo
+<code>T</code>.</p>
+<div class="fragment">
+<div class="destaque">
+<p>Dizer que a expressão <code>e</code> tem o tipo <code>T</code> é
+<span class="highlight">prometer</span> que, em tempo de execução,
+<strong>se</strong> a avaliação da expressão terminar, o valor produzido
+será pertencente ao tipo <code>T</code>.</p>
+</div>
+<p>Afirmações como essa expressam uma propriedade esperada do programa
+em <em>tempo de execução</em>.</p>
+<aside class="notes">
+<p>Observe que tipo continua sendo o conceito semântico associado a
+valores. Mas agora obtém também um caráter sintático: é um nome que
+associo a expressões e variáveis do programa. E os dois se relacionam
+porque os tipos de expressões são expectativas ou promessas dos tipos
+que tais expressões vão produzir ou a que as variáveis serão
+ligadas.</p>
+<p>E, idealmente, queremos comprová-las ou refutá-las em <em>tempo de
+análise</em> (antes da execução do programa).</p>
+</aside>
+</div>
+</section>
+<section id="analisemos-o-código-python-abaixo" class="slide level2">
+<h2>Analisemos o código Python abaixo</h2>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>x <span class="op">=</span> <span class="dv">3</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> x <span class="op">/</span> <span class="dv">2</span> <span class="op">+</span> <span class="dv">1</span></span></code></pre></div>
+<div class="fragment">
+<table>
+<thead>
+<tr>
+<th>Expressão ou variável</th>
+<th>Tipo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>3</code></td>
+<td><code>int</code></td>
+</tr>
+<tr>
+<td><code>x</code></td>
+<td><code>int</code></td>
+</tr>
+<tr>
+<td><code>2</code></td>
+<td><code>int</code></td>
+</tr>
+<tr>
+<td><code>1</code></td>
+<td><code>int</code></td>
+</tr>
+<tr>
+<td><code>x / 2</code></td>
+<td><code>float</code></td>
+</tr>
+<tr>
+<td><code>x / 2 + 1</code></td>
+<td><code>float</code></td>
+</tr>
+<tr>
+<td><code>1</code></td>
+<td><code>float</code></td>
+</tr>
+</tbody>
+</table>
+<p>Mas como chegamos a essas conclusões?</p>
+</div>
+</section>
+<section id="sistema-de-tipos-dinâmico" class="slide level2">
+<h2>Sistema de tipos dinâmico</h2>
+<p>Um sistema de tipos (dinâmico) é um conjunto de regras que <span
+class="highlight">classifica os valores</span> de um programa segundo
+seus tipos, para <span class="green"><strong>detectar</strong></span>,
+<span class="red"><strong>durante a execução</strong></span>, a
+aplicação de operações a valores inadequados.</p>
+<div class="fragment">
+<p>Um sistema de tipos dinâmico oferece dois componentes:</p>
+<ol type="1">
+<li>uma <strong>notação de tipos</strong> (e, se a linguagem permitir,
+anotações opcionais no programa)</li>
+<li>um conjunto de <strong>regras de tipo</strong> que verificam, a cada
+operação, se os <span class="red"><strong>valores</strong></span> são
+coerentes com ela, e sinalizam erro quando não são</li>
+</ol>
+</div>
+<div class="fragment">
+<div class="destaque">
+<p>Python tem um sistema de tipos dinâmico. De fato, Aljabr tem uma
+versão <em>light</em> também, já que, em tempo de execução, indica erros
+quando as operações não podem ser aplicadas (graças a nosso
+<em>lift</em>).</p>
+</div>
+</div>
+</section>
+<section id="sistema-de-tipos-estático" class="slide level2">
+<h2>Sistema de tipos (estático)</h2>
+<p>Um sistema de tipos (estático) é um conjunto de regras que <span
+class="highlight">classifica as expressões</span> de um programa segundo
+os tipos de valores que elas produzirão, para <span
+class="green"><strong>garantir</strong></span>, <span
+class="red"><strong>antes da execução</strong></span>, a ausência de
+erros.</p>
+<div class="fragment">
+<p>Um sistema de tipos estático oferece dois componentes:</p>
+<ol type="1">
+<li>uma <strong>notação de tipos</strong> (e, se a linguagem exigir, uma
+forma de fazer anotações no programa)</li>
+<li>um conjunto de <strong>regras de tipos</strong> que atribuem tipos
+às <span class="red"><strong>expressões</strong></span> e que rejeitam
+usos considerados inválidos</li>
+</ol>
+<div class="destaque">
+<p>É isto que queremos especificar e implementar nesta unidade.</p>
+</div>
+</div>
+</section>
+<section id="church-aljabr-sistema-de-tipos"
+class="slide level2 concept">
+<h2 class="concept"><code>Church</code> = Aljabr + sistema de tipos</h2>
+<p><code>church</code> = <code>aljabr</code> v3 + <strong>anotações de
+tipo</strong> + <strong>verificador estático</strong></p>
+<pre class="text"><code>aljabr v3 ┬──&gt; aljabr v4 (+ tipos algébricos, `match`)
+          ├──&gt; algora    (+ estado, comandos, `while`) ──&gt; objetos
+          └──&gt; church    (+ anotações e verificação estática)</code></pre>
+<div class="fragment">
+<ul>
+<li>a nova LP varia <strong>só</strong> na dimensão <em>tipos</em>, em
+relação a Aljabr</li>
+<li>o sistema de tipos cobrirá aritmética, variáveis, funções,
+<code>letrec</code> e <code>if</code></li>
+<li>nome em homenagem a <em>Alonzo Church</em>
+<ul>
+<li>criador do cálculo Lambda simplesmente tipado (1940)</li>
+</ul></li>
+</ul>
+</div>
+</section>
+<section id="um-pipeline-com-uma-etapa-nova" class="slide level2 small"
+style="--code-scale: 0.95">
+<h2 class="small" style="--code-scale: 0.95">Um pipeline com uma etapa
+nova</h2>
+<pre class="text"><code>  código fonte
+      ↓
+  [ lexer ]             ← REGEX
+      ↓
+  [ parser ]            ← EBNF
+      ↓
+  AST com anotações
+      ↓
+  [ verificador ]       ← regras de tipo       Γ ⊢ e : τ   ← NOVO
+      ↓
+  AST aprovada + tipo τ
+      ↓
+  [ interpretador ]     ← regras de avaliação  ⟨e, ρ⟩ ⇓ v
+      ↓
+  resultado</code></pre>
+<p>Programa rejeitado pelo verificador <span class="red"><strong>nunca
+executa</strong></span>.</p>
+<aside class="notes">
+<p>Observe que se trata de uma <em>nova ferramenta</em> do processamento
+da linguagem que precisa ser encaixada no <em>pipeline</em>
+estabelecido.</p>
+<p>O sistema de tipos permitirá anotar o código fonte, logo exige
+ajustes no léxico e sintático. Assim, a AST passa a incluir as anotações
+de tipo.</p>
+<p>O melhor ponto para a verificação é justamente entre o parser e
+avaliador. O verificador percorrerá a AST contendo as anotações para
+provar ou refutar as anotações de tipos que, como dissemos, podem ser
+vistas como <em>promessas</em> do programador a serem checadas.</p>
+</aside>
+</section>
+<section id="adição-do-tipo-bool-a-nossa-linguagem"
+class="slide level2">
+<h2>Adição do tipo <code>bool</code> a nossa linguagem</h2>
+<p>Recordem que na Aula 14, por simplicidade, optamos por não adicionar
+boolean explícito na linguagem. Decidimos usar números para decisões.
+Nossas opções eram (e são) as seguintes.</p>
+<table>
+<thead>
+<tr>
+<th>Opção da linguagem</th>
+<th>Como tratar <span
+class="red"><code>2 + (1 &lt; 2)</code></span>?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>números como condições (<code>0</code> é falso)</td>
+<td>aceitar (vale <code>3</code>)</td>
+</tr>
+<tr>
+<td>tpo <code>Num</code> distinto de <code>Bool</code></td>
+<td>rejeitar</td>
+</tr>
+</tbody>
+</table>
+<div class="fragment">
+<p><br>Por isso, em <span class="red"><strong>Churh</strong></span>
+teremos:</p>
+<ul>
+<li>um novo tipo <code>Bool</code>, com literais <code>verdadeiro</code>
+e <code>falso</code></li>
+<li>operadores <code>==</code> e <code>&lt;</code> produzem
+<code>Bool</code> (e só aceitam <code>Num</code>)</li>
+<li>e o <code>if</code> exige condição <code>Bool</code></li>
+</ul>
+<aside class="notes">
+<p>Nomes em português para não colidir com
+<code>true</code>/<code>false</code> da biblioteca de booleans da Aula
+12.</p>
+</aside>
+</div>
+</section>
+<section id="onde-o-programador-escreverá-os-tipos"
+class="slide level2">
+<h2>Onde o programador escreverá os tipos?</h2>
+<table>
+<thead>
+<tr>
+<th>Opção</th>
+<th>Exemplo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>anotar tudo</td>
+<td><code>let x: Num = 1 in …</code></td>
+</tr>
+<tr>
+<td>anotar só <strong>onde é necessário</strong></td>
+<td><code>fn (x: Num) =&gt; x + 1</code></td>
+</tr>
+<tr>
+<td>inferir tudo (Hindley–Milner)</td>
+<td><code>fn (x) =&gt; x + 1</code></td>
+</tr>
+</tbody>
+</table>
+<div class="fragment">
+<p><br>Para <span class="red"><strong>Churh</strong></span> optei
+por:</p>
+<ul>
+<li><span class="highlight">parâmetros</span> sempre anotados</li>
+<li><span class="highlight">tipo de retorno do
+<code>letrec</code></span> anotado</li>
+<li><code>let</code> e <code>fn</code> comum: o verificador
+<strong>sintetiza</strong> o tipo de baixo para cima</li>
+</ul>
+</div>
+<div class="fragment">
+<p><br></p>
+<p>Inferência (opção 3) é um algoritmo à parte: fora de escopo do
+curso!</p>
+</div>
+</section>
+<section id="por-que-o-letrec-precisa-do-tipo-de-retorno"
+class="slide level2">
+<h2>Por que o <code>letrec</code> precisa do tipo de retorno?</h2>
+<p>Se optamos por <strong>sintetizar</strong> o tipo de retorno de
+<code>fn</code>, porque não fazemos o mesmo com funções
+<code>letrec</code>?</p>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode aljabr"><code class="sourceCode aljabr"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">letrec</span> fat <span class="op">=</span> <span class="kw">fn</span> (n: <span class="bu">Num</span>) : <span class="bu">Num</span> <span class="op">=&gt;</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">if</span> n <span class="op">==</span> <span class="dv">0</span> <span class="kw">then</span> <span class="dv">1</span> <span class="kw">else</span> n <span class="op">*</span> <span class="fu">fat</span>(n <span class="op">-</span> <span class="dv">1</span>)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="kw">in</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="fu">fat</span>(<span class="dv">5</span>)</span></code></pre></div>
+<p>O problema é que, no corpo, a chamada <code>fat(n - 1)</code> precisa
+de um tipo. De onde o poderíamos obter?</p>
+<div class="fragment">
+<p>O tipo de <code>fat</code> depende do tipo do corpo, que é o que
+estamos calculando. Há, portanto, <span class="red"><strong>um
+ciclo</strong></span>. A anotação obrigatória <strong>quebra o
+ciclo</strong>.</p>
+</div>
+</section>
+<section id="como-anotaremos-tipos-de-funções" class="slide level2">
+<h2>Como anotaremos tipos de funções?</h2>
+<p>Funções também têm tipos. O tipo combina os tipos do domínio e do
+contradomínio ou, em _computês, os dos parâmetros e do valor de retorno.
+Abaixo, temos duas opções de notação.</p>
+<table>
+<thead>
+<tr>
+<th>Opção de linguagem</th>
+<th>Função de dois números para número</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>seta entre tipos (ML, Haskell)</td>
+<td><code>Num -&gt; Num -&gt; Num</code></td>
+</tr>
+<tr>
+<td><strong>lista de parâmetros</strong> e seta</td>
+<td><code>(Num, Num) -&gt; Num</code></td>
+</tr>
+</tbody>
+</table>
+<div class="fragment">
+<p>A primeira opção é apropriada para LPs em que as funções são
+<em>curried</em>. Não é nosso caso. Logo, para <span
+class="red"><strong>Church</strong></span>, decidi pela segunda opção. A
+lista é <strong>sempre</strong> <em>parentesada</em>:</p>
+<ul>
+<li><code>(Num) -&gt; Num</code></li>
+<li><code>() -&gt; Bool</code></li>
+<li><code>(Num, Num) -&gt; Bool</code></li>
+</ul>
+</div>
+</section>
+<section id="e-o-que-resta-para-o-tempo-de-execução"
+class="slide level2">
+<h2>E o que resta para o tempo de execução?</h2>
+<p>Se a verificação é feita em tempo de análise, como o sistema de tipos
+deve afetar o interpretador em tempo de execução?</p>
+<div class="fragment">
+<table>
+<colgroup>
+<col style="width: 59%" />
+<col style="width: 40%" />
+</colgroup>
+<thead>
+<tr>
+<th>Opções para a linguagem</th>
+<th>Tipos na execução?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>executar e verificar dinamicamente (*)</td>
+<td>os valores carregam o tipo</td>
+</tr>
+<tr>
+<td>verificar antes e <strong>apagar</strong> os tipos</td>
+<td>não existem, <code>eval</code> não muda</td>
+</tr>
+<tr>
+<td>verificar antes e manter tipos nos valores</td>
+<td>existem</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="fragment">
+<p>Para <span class="red"><strong>Church</strong></span> adotei a
+segunda opção acima, conhecida como <span class="highlight">apagamento
+de tipos</span> (<em>type erasure</em>).</p>
+<div class="destaque">
+<p>O verificador estático garante as verificações e só entrega código
+validado para o avaliador. Por isso, o avaliador pode <strong>ignorar as
+anotações</strong>. Não mexemos em nenhuma regra de avaliação.</p>
+</div>
+</div>
+</section>
+<section id="como-são-programas-em-church" class="slide level2">
+<h2>Como são programas em <span
+class="red"><strong>Church</strong></span>?</h2>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode aljabr"><code class="sourceCode aljabr"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> dobro <span class="op">=</span> <span class="kw">fn</span> (x: <span class="bu">Num</span>) <span class="op">=&gt;</span> x <span class="op">*</span> <span class="dv">2</span> <span class="kw">in</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dobro</span>(<span class="dv">21</span>)</span></code></pre></div>
+<div class="fragment">
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode aljabr"><code class="sourceCode aljabr"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> twice <span class="op">=</span> <span class="kw">fn</span> (f: (<span class="bu">Num</span>) <span class="op">-</span>&gt; <span class="bu">Num</span>) <span class="op">=&gt;</span> <span class="kw">fn</span> (x: <span class="bu">Num</span>) <span class="op">=&gt;</span> <span class="fu">f</span>(<span class="fu">f</span>(x)) <span class="kw">in</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">twice</span>(<span class="kw">fn</span> (n: <span class="bu">Num</span>) <span class="op">=&gt;</span> n <span class="op">+</span> <span class="dv">1</span>)(<span class="dv">0</span>)</span></code></pre></div>
+</div>
+<div class="fragment">
+<p>Igual a <code>aljabr</code> v3, exceto:</p>
+<ol type="1">
+<li><span class="highlight">parâmetros</span> vêm com tipo
+(<code>x: Num</code>)</li>
+<li><span class="highlight"><code>letrec</code></span> ganha o tipo de
+retorno</li>
+</ol>
+</div>
+</section>
+<section id="exemplos-que-não-são-válidos-em-church"
+class="slide level2">
+<h2>Exemplos que não são válidos em <span
+class="red"><strong>Church</strong></span></h2>
+<p>Relembre que optamos por não termos tipos nas variáveis. Os tipos são
+sintetizados das expressões.</p>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode algora"><code class="sourceCode algora"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>let <span class="at">x</span><span class="op">:</span> Num <span class="op">=</span> <span class="dv">10</span> in                     <span class="co"># erro sintático</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="dv">10</span> <span class="op">&lt;</span> x</span></code></pre></div>
+<p>Funções lambda só têm tipos nos parâmetros, não de retorno. Mesmo
+motivo acima.</p>
+<div class="sourceCode" id="cb17"><pre
+class="sourceCode algora"><code class="sourceCode algora"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>let f <span class="op">=</span> <span class="kw">fn</span> (<span class="at">x</span><span class="op">:</span> Num, <span class="at">y</span><span class="op">:</span> Num)<span class="op">:</span> Num <span class="op">=</span>&gt;    <span class="co"># outro erro sintático</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  x <span class="op">*</span> y <span class="op">+</span> <span class="dv">1</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>in</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="fu">f</span>(<span class="dv">10</span>, <span class="dv">20</span>) <span class="op">+</span> <span class="dv">1</span></span></code></pre></div>
+</section>
+<section id="resumo-dos-tipos-de-church" class="slide level2">
+<h2>Resumo dos tipos de <code>church</code></h2>
+<table>
+<thead>
+<tr>
+<th>Tipo</th>
+<th>Classifica</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Num</code></td>
+<td>números</td>
+</tr>
+<tr>
+<td><code>Bool</code></td>
+<td><code>verdadeiro</code>, <code>falso</code>, resultados de
+comparações</td>
+</tr>
+<tr>
+<td><code>(τ₁, …, τₙ) -&gt; τ</code></td>
+<td>funções de <code>n</code> argumentos</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>Tipo</th>
+<th>Lê-se</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>(Num) -&gt; Num</code></td>
+<td>recebe número, devolve número</td>
+</tr>
+<tr>
+<td><code>() -&gt; Num</code></td>
+<td>sem argumentos, devolve número</td>
+</tr>
+<tr>
+<td><code>((Num) -&gt; Num, Num) -&gt; Num</code></td>
+<td>recebe uma função e um número</td>
+</tr>
+<tr>
+<td><code>(Num) -&gt; (Num) -&gt; Num</code></td>
+<td>recebe número, devolve <strong>uma função</strong></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="o-que-o-verificador-promete" class="slide level2">
+<h2>O que o verificador promete</h2>
+<p>Programa <strong>aprovado</strong> ⇒ os erros não ocorrem na
+execução:</p>
+<table>
+<thead>
+<tr>
+<th>Erro dinâmico de <code>aljabr</code> v3</th>
+<th>Em <code>church</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>variável não vinculada</td>
+<td>evitado: <code>x</code> não tem tipo</td>
+</tr>
+<tr>
+<td>aritmética com valor que não é número</td>
+<td>evitado por (T-Op)</td>
+</tr>
+<tr>
+<td>aplicar algo que não é função</td>
+<td>evitado <em>(Aula 21)</em></td>
+</tr>
+<tr>
+<td>número errado de argumentos</td>
+<td>evitado <em>(Aula 21)</em></td>
+</tr>
+<tr>
+<td><code>if</code> com condição que não é número</td>
+<td>evitado <em>(Aula 21)</em></td>
+</tr>
+</tbody>
+</table>
+<div class="fragment">
+<p>Chama-se <span class="highlight">segurança de tipos</span> (<em>type
+soundness</em> ou <em>safety</em>).</p>
+<div class="footnote">
+<p><br> <br> <br> <br> <br> (*) Detalhe: a prova desta garantia está
+além do escopo deste curso.</p>
+</div>
+</div>
+</section>
+<section id="o-verificador-não-promete" class="slide level2">
+<h2>O verificador <strong>não</strong> promete…</h2>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode aljabr"><code class="sourceCode aljabr"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># … que o programa termina</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="kw">letrec</span> f <span class="op">=</span> <span class="kw">fn</span> (n: <span class="bu">Num</span>) : <span class="bu">Num</span> <span class="op">=&gt;</span>       <span class="co"># f é bem tipado</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">f</span>(n)</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="kw">in</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="fu">f</span>(<span class="dv">1</span>)</span></code></pre></div>
+<div class="fragment">
+<div class="sourceCode" id="cb19"><pre
+class="sourceCode aljabr"><code class="sourceCode aljabr"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># … que não ocorrerá `erro` em tempo de execução</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="dv">1</span> <span class="op">/</span> <span class="dv">0</span>          <span class="co"># tem tipo Num e vale erro</span></span></code></pre></div>
+</div>
+<div class="fragment">
+<div class="sourceCode" id="cb20"><pre
+class="sourceCode aljabr"><code class="sourceCode aljabr"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># … que o programa faz o que você quer</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>x <span class="op">+</span> <span class="dv">2</span>         <span class="co"># no lugar `x * 2` será aceito</span></span></code></pre></div>
+</div>
+</section>
+<section id="o-verificador-é-conservador" class="slide level2">
+<h2>O verificador é conservador…</h2>
+<div class="sourceCode" id="cb21"><pre
+class="sourceCode aljabr"><code class="sourceCode aljabr"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">if</span> verdadeiro <span class="kw">then</span> <span class="dv">1</span> <span class="kw">else</span> <span class="dv">2</span> <span class="op">+</span> verdadeiro      <span class="co"># será rejeitado</span></span></code></pre></div>
+<div class="sourceCode" id="cb22"><pre
+class="sourceCode aljabr"><code class="sourceCode aljabr"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="kw">if</span> <span class="dv">3</span> <span class="op">&lt;</span> <span class="dv">5</span> <span class="kw">then</span> verdadeiro <span class="kw">else</span> <span class="dv">2</span> <span class="op">+</span> <span class="dv">3</span>           <span class="co"># será rejeitado</span></span></code></pre></div>
+<p>Nenhuma execução chega ao <code>else</code>, mas os programas são
+<strong>rejeitados</strong>.</p>
+<aside class="notes">
+<p>Perguntar: isto é um defeito ou o preço de decidir antes de executar?
+Não existe verificador que aceite exatamente os programas sem erro.
+Projetamos um compromisso: rejeitar um pouco demais para nunca aceitar
+de menos.</p>
+</aside>
+</section>
+<section id="aceitos-rejeitados" class="slide level2">
+<h2>Aceitos × rejeitados</h2>
+<table>
+<colgroup>
+<col style="width: 47%" />
+<col style="width: 52%" />
+</colgroup>
+<thead>
+<tr>
+<th>Programa</th>
+<th>Resultado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>2 + 3 * 4</code></td>
+<td><code>Num</code></td>
+</tr>
+<tr>
+<td><code>let x = 2 + 3 in x &lt; 10</code></td>
+<td><code>Bool</code></td>
+</tr>
+<tr>
+<td><code>let x = 1 in let x = x &lt; 2 in x</code></td>
+<td><code>Bool</code> (sombreamento muda o tipo)</td>
+</tr>
+<tr>
+<td><code>2 + verdadeiro</code></td>
+<td><strong>erro de tipo</strong></td>
+</tr>
+<tr>
+<td><code>(1 &lt; 2) + 1</code></td>
+<td><strong>erro de tipo</strong> (era o <code>2 + (1 &lt; 2)</code> do
+início!)</td>
+</tr>
+<tr>
+<td><code>verdadeiro == verdadeiro</code></td>
+<td><strong>erro de tipo</strong> (<code>==</code> só para
+<code>Num</code>)</td>
+</tr>
+<tr>
+<td><code>x + 1</code></td>
+<td><strong>erro de tipo</strong> (<code>x</code> não declarada)</td>
+</tr>
+<tr>
+<td><code>(let x = 1 in x) + x</code></td>
+<td><strong>erro de tipo</strong> (<code>x</code> fora do escopo)</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="a-ser-continuado" class="slide level2">
+<h2>a ser continuado…</h2>
+</section>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+
+  <!-- reveal.js plugins -->
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/notes/notes.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/search/search.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/zoom/zoom.js"></script>
+
+  <script>
+
+      // Full list of configuration options available at:
+      // https://revealjs.com/config/
+      Reveal.initialize({
+        // Display controls in the bottom right corner
+        controls: false,
+
+        // Help the user learn the controls by providing hints, for example by
+        // bouncing the down arrow when they first encounter a vertical slide
+        controlsTutorial: true,
+
+        // Determines where controls appear, "edges" or "bottom-right"
+        controlsLayout: 'bottom-right',
+
+        // Visibility rule for backwards navigation arrows; "faded", "hidden"
+        // or "visible"
+        controlsBackArrows: 'faded',
+
+        // Display a presentation progress bar
+        progress: false,
+
+        // Display the page number of the current slide
+        slideNumber: 'c/t',
+
+        // 'all', 'print', or 'speaker'
+        showSlideNumber: 'all',
+
+        // Add the current slide number to the URL hash so that reloading the
+        // page/copying the URL will return you to the same slide
+        hash: true,
+
+        // Start with 1 for the hash rather than 0
+        hashOneBasedIndex: false,
+
+        // Flags if we should monitor the hash and change slides accordingly
+        respondToHashChanges: true,
+
+        // Push each slide change to the browser history
+        history: false,
+
+        // Enable keyboard shortcuts for navigation
+        keyboard: true,
+
+        // Enable the slide overview mode
+        overview: true,
+
+        // Disables the default reveal.js slide layout (scaling and centering)
+        // so that you can use custom CSS layout
+        disableLayout: false,
+
+        // Vertical centering of slides
+        center: false,
+
+        // Enables touch navigation on devices with touch input
+        touch: true,
+
+        // Loop the presentation
+        loop: false,
+
+        // Change the presentation direction to be RTL
+        rtl: false,
+
+        // see https://revealjs.com/vertical-slides/#navigation-mode
+        navigationMode: 'default',
+
+        // Randomizes the order of slides each time the presentation loads
+        shuffle: false,
+
+        // Turns fragments on and off globally
+        fragments: true,
+
+        // Flags whether to include the current fragment in the URL,
+        // so that reloading brings you to the same fragment position
+        fragmentInURL: true,
+
+        // Flags if the presentation is running in an embedded mode,
+        // i.e. contained within a limited portion of the screen
+        embedded: false,
+
+        // Flags if we should show a help overlay when the questionmark
+        // key is pressed
+        help: true,
+
+        // Flags if it should be possible to pause the presentation (blackout)
+        pause: true,
+
+        // Flags if speaker notes should be visible to all viewers
+        showNotes: false,
+
+        // Global override for autoplaying embedded media (null/true/false)
+        autoPlayMedia: null,
+
+        // Global override for preloading lazy-loaded iframes (null/true/false)
+        preloadIframes: null,
+
+        // Number of milliseconds between automatically proceeding to the
+        // next slide, disabled when set to 0, this value can be overwritten
+        // by using a data-autoslide attribute on your slides
+        autoSlide: 0,
+
+        // Stop auto-sliding after user input
+        autoSlideStoppable: true,
+
+        // Use this method for navigation when auto-sliding
+        autoSlideMethod: null,
+
+        // Specify the average time in seconds that you think you will spend
+        // presenting each slide. This is used to show a pacing timer in the
+        // speaker view
+        defaultTiming: null,
+
+        // Enable slide navigation via mouse wheel
+        mouseWheel: false,
+
+        // The display mode that will be used to show slides
+        display: 'block',
+
+        // Hide cursor if inactive
+        hideInactiveCursor: true,
+
+        // Time before the cursor is hidden (in ms)
+        hideCursorTime: 5000,
+
+        // Opens links in an iframe preview overlay
+        previewLinks: false,
+
+        // Transition style (none/fade/slide/convex/concave/zoom)
+        transition: 'none',
+
+        // Transition speed (default/fast/slow)
+        transitionSpeed: 'default',
+
+        // Transition style for full page slide backgrounds
+        // (none/fade/slide/convex/concave/zoom)
+        backgroundTransition: 'fade',
+
+        // Number of slides away from the current that are visible
+        viewDistance: 3,
+
+        // Number of slides away from the current that are visible on mobile
+        // devices. It is advisable to set this to a lower number than
+        // viewDistance in order to save resources.
+        mobileViewDistance: 2,
+
+        // The "normal" size of the presentation, aspect ratio will be preserved
+        // when the presentation is scaled to fit different resolutions. Can be
+        // specified using percentage units.
+        width: 1280,
+
+        height: 960,
+
+        // Factor of the display size that should remain empty around the content
+        margin: 3.0e-2,
+
+        // reveal.js plugins
+        plugins: [
+          RevealNotes,
+          RevealSearch,
+          RevealZoom
+        ]
+      });
+    </script>
+    </body>
+</html>
